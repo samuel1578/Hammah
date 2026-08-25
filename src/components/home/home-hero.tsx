@@ -18,7 +18,6 @@ export function HomeHero() {
         <div className="absolute inset-0 bg-[#111110]">
           {media.type === "video" ? (
             <video
-              src={media.currentSrc}
               autoPlay
               muted
               loop
@@ -26,7 +25,10 @@ export function HomeHero() {
               preload="metadata"
               aria-hidden="true"
               className="h-full w-full object-cover object-center"
-            />
+            >
+              <source src="/mobvideo.mp4" media="(max-width: 767px)" type="video/mp4" />
+              <source src={media.currentSrc} type="video/mp4" />
+            </video>
           ) : (
             <motion.div
               initial={{ scale: shouldReduceMotion ? 1 : 1.08 }}
