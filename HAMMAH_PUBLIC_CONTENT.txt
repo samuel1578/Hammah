@@ -1,0 +1,1631 @@
+HAMMAH PUBLIC WEBSITE CONTENT GUIDE
+Brand: SL by Hammah
+Scope: Public-facing website content for all 17 public pages
+Purpose: Source content for frontend implementation and later AI-agent insertion
+Tone: Modern, composed, human, premium, direct, restrained
+Status: Working content baseline — factual claims should remain conservative until formally approved
+
+==================================================
+GLOBAL CONTENT PRINCIPLES
+==================================================
+
+SL by Hammah should sound like a real fashion brand run by real people.
+
+The voice should be:
+- direct
+- calm
+- specific
+- confident without sounding self-important
+- premium without sounding distant
+- contemporary without sounding trendy for the sake of it
+
+Avoid generic fashion phrases such as:
+- elevate your wardrobe
+- timeless elegance
+- where tradition meets modernity
+- redefining luxury
+- crafted for the modern individual
+- style without limits
+- experience sophistication
+- discover unparalleled craftsmanship
+
+Do not invent:
+- final prices
+- exact fabric compositions
+- sourcing claims
+- sustainability claims
+- production methods
+- founder history
+- release dates
+- delivery times
+- return conditions
+- cultural meanings behind prints
+- guarantees
+
+Approved positioning line:
+“Considered essentials, cut for people who don’t dress for anyone else.”
+
+Product universe:
+- African Print Trousers — available at MVP launch
+- Kaftans — future category
+- African-made Footwear — future category
+
+Registered members are called:
+Hamatees
+
+Member environment:
+The Hammah Legacy
+
+
+==================================================
+GLOBAL NAVIGATION
+==================================================
+
+Primary navigation:
+Home
+Shop
+Collections
+Our Story
+The Hammah Legacy
+
+Utility navigation:
+Search
+Saved
+Account
+Track Order
+
+Mobile category links:
+Trousers — Available now
+Kaftans — Coming soon
+African-made Footwear — Coming soon
+
+Theme labels:
+System
+Light
+Dark
+
+Global CTA language:
+Explore Collection 001
+Shop Trousers
+View Collection
+Order This Piece
+Make This Yours
+Save Piece
+Join the Legacy
+Become a Hamatee
+Track Order
+Continue with Hammah on WhatsApp
+
+
+==================================================
+1. HOME
+Route: /
+==================================================
+
+PAGE PURPOSE:
+Introduce SL by Hammah, establish the broader brand world, present Collection 001, direct users into shopping, and introduce The Hammah Legacy.
+
+HERO
+
+Eyebrow:
+SL BY HAMMAH
+
+Headline:
+Considered essentials,
+cut for people who don’t
+dress for anyone else.
+
+Supporting copy:
+Premium African fashion designed around strong pieces, considered detail, and a quieter kind of confidence.
+
+Primary CTA:
+Explore Collection 001
+
+Secondary CTA:
+Join the Legacy
+
+
+SECTION: COLLECTION 001
+
+Eyebrow:
+COLLECTION 001
+
+Headline:
+The first release.
+
+Body:
+Eight African-print trouser designs make up the opening collection from SL by Hammah.
+
+CTA:
+View Collection 001
+
+
+SECTION: THE HAMMAH WORLD
+
+Eyebrow:
+THE HAMMAH WORLD
+
+Headline:
+More than one expression.
+
+Intro:
+Trousers open the story. Kaftans and African-made footwear will extend it.
+
+Category 1:
+TROUSERS
+Available now
+
+Category description:
+The first orderable Hammah category, introduced through Collection 001.
+
+CTA:
+Explore Trousers
+
+Category 2:
+KAFTANS
+Coming soon
+
+Category description:
+A future Hammah category currently taking shape.
+
+CTA:
+Preview Kaftans
+
+Category 3:
+AFRICAN-MADE FOOTWEAR
+Coming soon
+
+Category description:
+Footwear will extend the Hammah wardrobe beyond clothing.
+
+CTA:
+Preview Footwear
+
+
+SECTION: DETAIL / CRAFT
+
+Eyebrow:
+IN THE DETAILS
+
+Headline:
+Look closer.
+
+Body:
+Print, proportion, construction and finish become clearer at close range.
+
+Supporting microcopy options:
+The details are part of the piece.
+Nothing needs to shout.
+
+
+SECTION: FEATURED PIECES
+
+Eyebrow:
+COLLECTION 001
+
+Headline:
+Available now.
+
+Body:
+A selection from the opening trouser collection.
+
+CTA:
+Shop all trousers
+
+
+SECTION: POINT OF VIEW
+
+Headline:
+Made for the person wearing it.
+Not the room watching.
+
+Body:
+SL by Hammah is built around considered clothing and a quieter kind of confidence.
+
+CTA:
+Read our story
+
+
+SECTION: LEGACY
+
+Eyebrow:
+THE HAMMAH LEGACY
+
+Headline:
+The relationship continues after the first piece.
+
+Body:
+Become a Hamatee to keep your orders, saved pieces and member privileges together.
+
+Benefits:
+Order history
+Saved pieces
+Member privileges
+Early-access opportunities
+
+CTA:
+Join the Legacy
+
+
+SECTION: CLOSING CAMPAIGN
+
+Eyebrow:
+SL BY HAMMAH
+
+Headline:
+Considered essentials.
+
+CTA:
+Shop Collection 001
+
+
+==================================================
+2. SHOP
+Route: /shop
+==================================================
+
+PAGE PURPOSE:
+Direct product discovery while making it clear that trousers are the current orderable category and the brand will expand.
+
+PAGE INTRO
+
+Eyebrow:
+SHOP
+
+Headline:
+The pieces.
+
+Body:
+Collection 001 is available now. Kaftans and African-made footwear will join the Hammah catalogue in future releases.
+
+Category labels:
+All
+Trousers
+Kaftans
+Footwear
+
+
+PRODUCT GRID COPY
+
+Product naming:
+Design 01
+Design 02
+Design 03
+Design 04
+Design 05
+Design 06
+Design 07
+Design 08
+
+Product collection label:
+Collection 001
+
+Pricing placeholder:
+Price on request
+
+Availability:
+Available
+
+Card CTA:
+View Piece
+
+
+EDITORIAL BREAK
+
+Headline:
+ONE COLLECTION.
+EIGHT EXPRESSIONS.
+
+Optional body:
+Different prints. One opening statement.
+
+
+EMPTY/FUTURE CATEGORY MESSAGE
+
+Headline:
+Not available to order yet.
+
+Body:
+This category is part of Hammah’s future catalogue.
+
+CTA:
+Join the Legacy for updates
+
+
+==================================================
+3. COLLECTIONS
+Route: /collections
+==================================================
+
+PAGE PURPOSE:
+Present the active collection and the future product worlds in one editorial overview.
+
+PAGE INTRO
+
+Eyebrow:
+COLLECTIONS
+
+Headline:
+The current release and what comes next.
+
+Body:
+Hammah begins with Collection 001 and expands from there.
+
+
+COLLECTION 001 BLOCK
+
+Label:
+COLLECTION 001
+
+Title:
+African-print trousers
+
+Status:
+Available now
+
+Body:
+Eight trouser designs form the first orderable Hammah collection.
+
+CTA:
+Enter Collection 001
+
+
+KAFTANS BLOCK
+
+Label:
+KAFTANS
+
+Status:
+In development
+
+Body:
+A future Hammah category currently taking shape.
+
+CTA:
+Preview Kaftans
+
+
+FOOTWEAR BLOCK
+
+Label:
+AFRICAN-MADE FOOTWEAR
+
+Status:
+In development
+
+Body:
+Footwear will extend the Hammah wardrobe beyond clothing.
+
+CTA:
+Preview Footwear
+
+
+==================================================
+4. COLLECTION 001
+Route: /collections/collection-001
+==================================================
+
+PAGE PURPOSE:
+Give the launch collection a dedicated editorial identity while still functioning as a clear route into individual products.
+
+HERO
+
+Eyebrow:
+COLLECTION 001
+
+Headline:
+The opening collection.
+
+Body:
+Eight African-print trouser designs introduce the first orderable collection from SL by Hammah.
+
+CTA:
+Explore the pieces
+
+
+PRODUCT SECTION
+
+Section title:
+Eight designs.
+One opening collection.
+
+Body:
+Each piece carries its own print and visual character while remaining part of the same first release.
+
+Card labels:
+Design 01
+Design 02
+Design 03
+Design 04
+Design 05
+Design 06
+Design 07
+Design 08
+
+Collection label:
+Collection 001
+
+Pricing:
+Price on request
+
+CTA:
+View Piece
+
+
+DETAIL INTERLUDE
+
+Eyebrow:
+SEEN FROM CLOSER
+
+Headline:
+The collection changes when you look again.
+
+Body:
+Use close-up imagery here to reveal print, finish and construction without over-explaining the garment.
+
+
+LEGACY CTA
+
+Headline:
+Keep what catches your eye.
+
+Body:
+Hamatees can save pieces and keep their Hammah activity together.
+
+CTA:
+Join the Legacy
+
+
+==================================================
+5. KAFTANS
+Route: /collections/kaftans
+==================================================
+
+PAGE PURPOSE:
+Establish kaftans as a real Hammah category without pretending that products are already available.
+
+HERO
+
+Eyebrow:
+KAFTANS
+
+Headline:
+Another Hammah form is coming.
+
+Body:
+Kaftans are part of the Hammah product world and are currently in development.
+
+Status:
+Coming soon
+
+
+EDITORIAL SECTION
+
+Headline:
+A category taking shape.
+
+Body:
+This space will eventually introduce Hammah kaftans through their own photography, product stories and orderable pieces.
+
+Supporting line:
+For now, consider this a first look at where the wardrobe is heading.
+
+
+LEGACY CTA
+
+Headline:
+Know when it arrives.
+
+Body:
+Join the Hammah Legacy for future collection updates and early-access opportunities.
+
+CTA:
+Join the Legacy
+
+
+==================================================
+6. AFRICAN-MADE FOOTWEAR
+Route: /collections/footwear
+==================================================
+
+PAGE PURPOSE:
+Establish footwear as part of the Hammah future catalogue without inventing products or release dates.
+
+HERO
+
+Eyebrow:
+AFRICAN-MADE FOOTWEAR
+
+Headline:
+The Hammah wardrobe moves beyond clothing.
+
+Body:
+African-made footwear is planned as a future Hammah category and is not yet available to order.
+
+Status:
+Coming soon
+
+
+EDITORIAL SECTION
+
+Headline:
+Built for what comes next.
+
+Body:
+This page will become the home for Hammah footwear as the category develops.
+
+Supporting line:
+Product details, pricing and availability will appear here when the collection is ready.
+
+
+LEGACY CTA
+
+Headline:
+Follow what comes next.
+
+Body:
+Become a Hamatee and stay closer to future Hammah releases.
+
+CTA:
+Join the Legacy
+
+
+==================================================
+7. PRODUCT DETAIL
+Route: /product/[slug]
+==================================================
+
+PAGE PURPOSE:
+Help a customer understand, configure and order one piece with minimal friction.
+
+PRODUCT HEADER
+
+Product name:
+Design 01
+or matching design fixture
+
+Collection:
+Collection 001
+
+Price:
+Price on request
+
+Availability:
+Available
+
+Short description:
+One of eight trouser designs in Collection 001. Final fabrication and product-specific details will be added from approved product information.
+
+
+PRODUCT OPTIONS
+
+Label:
+Select size
+
+Options:
+30
+32
+34
+36
+
+Helper text:
+Choose the closest available option. Final sizing guidance will be added from approved measurements.
+
+Quantity:
+Quantity
+
+Primary CTA:
+Order This Piece
+
+Secondary CTA:
+Save Piece
+
+Size guide CTA:
+View Size Guide
+
+
+DELIVERY NOTE
+
+Heading:
+Delivery
+
+Body:
+Delivery arrangements and costs are confirmed after your order request.
+
+
+ORDER PROCESS NOTE
+
+Heading:
+How ordering works
+
+Body:
+Submit your order request first. Hammah will then continue the conversation with you directly and confirm the next steps, including payment and delivery.
+
+CTA:
+Order This Piece
+
+
+MEDIA TABS
+
+Photos
+Video
+360°
+
+Video placeholder:
+Product video will appear here when available.
+
+360 placeholder:
+Interactive garment view coming later.
+
+
+RELATED PRODUCTS
+
+Heading:
+More from Collection 001
+
+CTA:
+View Piece
+
+
+==================================================
+8. OUR STORY
+Route: /our-story
+==================================================
+
+PAGE PURPOSE:
+Explain what Hammah stands for without inventing operational history or unverifiable claims.
+
+HERO
+
+Eyebrow:
+OUR STORY
+
+Headline:
+Why Hammah exists.
+
+Body:
+SL by Hammah begins with a simple position: clothing should feel considered before it feels loud.
+
+
+SECTION: POINT OF VIEW
+
+Headline:
+For the person wearing it.
+
+Body:
+The brand is made for adults who prefer fewer, better pieces and value quality over visible logos.
+
+
+SECTION: AFRICAN FASHION CONTEXT
+
+Headline:
+Rooted here. Designed to move.
+
+Body:
+African print is part of Hammah’s opening visual language, while the wider brand will extend into kaftans, footwear and future categories.
+
+
+SECTION: CRAFT
+
+Headline:
+The making matters.
+
+Body:
+This section is reserved for approved information about Hammah’s manufacturing, construction and finishing process.
+
+Placeholder note:
+Replace this text when the final production story has been documented.
+
+
+SECTION: SOURCING
+
+Headline:
+What a piece begins with.
+
+Body:
+This section will explain approved sourcing and material information once the brand has finalised the facts it wants to publish.
+
+
+SECTION: SUSTAINABILITY
+
+Headline:
+Responsibility needs specifics.
+
+Body:
+Hammah’s sustainability position will be published here once sourcing, production and material claims have been formally documented.
+
+
+SECTION: CLOSING
+
+Headline:
+Considered essentials, cut for people who don’t dress for anyone else.
+
+CTA:
+Explore Collection 001
+
+
+==================================================
+9. THE HAMMAH LEGACY
+Route: /legacy
+==================================================
+
+PAGE PURPOSE:
+Explain the value of becoming a Hamatee and present membership as a deeper relationship with the brand, not simply account creation.
+
+HERO
+
+Eyebrow:
+THE HAMMAH LEGACY
+
+Headline:
+Stay closer to Hammah.
+
+Body:
+Joining the Hammah Legacy creates your Hamatee account and keeps your relationship with the brand in one place.
+
+CTA:
+Become a Hamatee
+
+
+SECTION: WHAT YOU KEEP
+
+Headline:
+Your Hammah, remembered.
+
+Intro:
+The Legacy keeps the parts of your relationship with Hammah that matter.
+
+Items:
+Orders
+See current and previous orders in one place.
+
+Saved Pieces
+Keep pieces you want to return to later.
+
+Member Privileges
+See any discounts or benefits assigned to your account.
+
+Pieces Collected
+Build a simple record of completed Hammah purchases.
+
+
+SECTION: MEMBER SINCE
+
+Label:
+HAMATEE SINCE
+
+Example:
+2026
+
+Body:
+Your membership date becomes part of your Legacy profile.
+
+
+SECTION: PRIVILEGES
+
+Headline:
+A little something from Hammah.
+
+Body:
+Privileges are assigned by Hammah and may apply to a future order.
+
+Example UI:
+15% off your next piece
+
+Small note:
+Example member benefit. Actual privileges vary by account.
+
+
+SECTION: FINAL CTA
+
+Headline:
+Join the Hammah Legacy.
+
+Body:
+Create your account and become a Hamatee.
+
+CTA:
+Create Account
+
+
+==================================================
+10. SAVED PIECES
+Route: /saved
+==================================================
+
+PAGE PURPOSE:
+Give users a place to revisit pieces they are interested in.
+
+PAGE INTRO
+
+Eyebrow:
+SAVED
+
+Headline:
+Saved Pieces
+
+Body:
+Keep the Hammah pieces you want to return to.
+
+
+POPULATED STATE
+
+Card actions:
+View Product
+Order This Piece
+Remove
+
+
+EMPTY STATE
+
+Headline:
+Nothing saved yet.
+
+Body:
+When a piece catches your eye, save it here and come back when you’re ready.
+
+CTA:
+Explore Collection 001
+
+
+SIGNED-OUT STATE
+
+Headline:
+Keep your saved pieces together.
+
+Body:
+Join the Hammah Legacy or sign in to keep saved pieces connected to your account.
+
+Primary CTA:
+Sign In
+
+Secondary CTA:
+Join the Legacy
+
+
+==================================================
+11. TRACK ORDER
+Route: /track
+==================================================
+
+PAGE PURPOSE:
+Allow guest customers to check order progress without creating an account.
+
+PAGE INTRO
+
+Eyebrow:
+ORDER TRACKING
+
+Headline:
+Track your order.
+
+Body:
+Use the reference and tracking information provided after your order request.
+
+
+FORM LABELS
+
+Order Reference
+Tracking Code
+
+CTA:
+Track Order
+
+
+HELP TEXT
+
+Can’t find your tracking details?
+Contact Hammah and we’ll help you locate your order.
+
+
+MOCK ORDER RESULT
+
+Order:
+HAM-EXAMPLE-001
+
+Product:
+Design 01
+
+Current status:
+In Preparation
+
+Payment status:
+Not Required Yet
+
+Latest update:
+Your order is currently being prepared. Hammah will contact you when the next step is ready.
+
+
+TIMELINE
+
+Request Received
+Contacted
+Confirmed
+In Preparation
+Ready
+Out for Delivery
+Delivered
+
+
+MEMBERSHIP CONVERSION
+
+Headline:
+Want all your orders in one place?
+
+Body:
+Join the Hammah Legacy to keep future Hammah orders connected to your account.
+
+CTA:
+Join the Legacy
+
+
+==================================================
+12. LOGIN
+Route: /login
+==================================================
+
+PAGE PURPOSE:
+Create a calm, branded entry point into The Hammah Legacy.
+
+Eyebrow:
+THE HAMMAH LEGACY
+
+Headline:
+Welcome back.
+
+Body:
+Sign in to return to your Hammah account.
+
+
+Fields:
+Email
+Password
+
+Primary CTA:
+Sign In
+
+Secondary authentication CTA:
+Continue with Google
+
+Link:
+Forgot password?
+
+
+NEW MEMBER PROMPT
+
+Text:
+Not a Hamatee yet?
+
+CTA:
+Join the Legacy
+
+
+ERROR COPY
+
+Invalid credentials:
+We couldn’t sign you in with those details. Check your email and password and try again.
+
+Generic error:
+Something went wrong while signing you in. Try again.
+
+Unverified account notice:
+Your account is active, but your email still needs to be verified before you can place member orders.
+
+
+==================================================
+13. SIGNUP
+Route: /signup
+==================================================
+
+PAGE PURPOSE:
+Create a simple two-step signup flow that feels like joining the brand, not completing a long account form.
+
+PAGE INTRO
+
+Eyebrow:
+JOIN THE HAMMAH LEGACY
+
+Headline:
+Become a Hamatee.
+
+Body:
+Create your Hammah account in two short steps.
+
+
+STEP 1
+
+Step label:
+STEP 1 OF 2
+
+Headline:
+Start with you.
+
+Fields:
+First Name
+Last Name
+Email
+Phone / WhatsApp
+
+CTA:
+Continue
+
+Google option:
+Continue with Google
+
+
+STEP 2
+
+Step label:
+STEP 2 OF 2
+
+Headline:
+Create your account.
+
+Field:
+Password
+
+Checkbox:
+I agree to the Terms & Conditions.
+
+Checkbox:
+I acknowledge the Privacy Policy.
+
+Primary CTA:
+Join the Legacy
+
+Secondary:
+Back
+
+
+GOOGLE PROFILE COMPLETION
+
+Headline:
+One last thing.
+
+Body:
+Where can Hammah reach you?
+
+Field:
+Phone / WhatsApp
+
+CTA:
+Complete Account
+
+
+SUCCESS STATE
+
+Headline:
+Welcome to the Hammah Legacy.
+
+Body:
+Your Hamatee account has been created.
+
+CTA:
+Enter the Legacy
+
+
+==================================================
+14. PRIVACY POLICY
+Route: /privacy
+==================================================
+
+PAGE PURPOSE:
+Provide a structured privacy-policy shell without pretending final legal wording has been approved.
+
+PAGE TITLE:
+Privacy Policy
+
+INTRO:
+This page explains how Hammah handles information provided through the website. Final legal wording should be reviewed before production publication.
+
+
+SECTION: INFORMATION WE COLLECT
+
+Draft:
+Hammah may collect information you provide when creating an account, placing an order request, contacting the brand, saving delivery details, or using website features.
+
+Examples may include:
+Name
+Email address
+Phone or WhatsApp number
+Delivery information
+Account information
+Order information
+
+
+SECTION: HOW INFORMATION IS USED
+
+Draft:
+Information may be used to manage accounts, respond to order requests, coordinate fulfilment, provide customer support, communicate relevant updates, and operate the website.
+
+
+SECTION: ORDER INFORMATION
+
+Draft:
+Order details are used to process and track customer requests and to support communication between Hammah and the customer.
+
+
+SECTION: ACCOUNT INFORMATION
+
+Draft:
+Hamatee account information is used to provide The Hammah Legacy, including order history, saved pieces and member privileges.
+
+
+SECTION: COMMUNICATIONS
+
+Draft:
+Hammah may send transactional or approved member communications using the contact information associated with an account or order.
+
+
+SECTION: SERVICE PROVIDERS
+
+Draft:
+Hammah may rely on third-party services for website hosting, authentication, email delivery, analytics, communication or other technical functions.
+
+
+SECTION: ANALYTICS
+
+Draft:
+The website may use analytics to understand how customers interact with products and key website journeys. Analytics should avoid collecting unnecessary personal information.
+
+
+SECTION: RETENTION
+
+Draft:
+Information may be retained for as long as necessary to support legitimate operational, legal and customer-service requirements.
+
+
+SECTION: YOUR RIGHTS
+
+Placeholder:
+Final rights language must be reviewed against the applicable legal requirements before launch.
+
+
+SECTION: CONTACT
+
+Draft:
+Questions about privacy can be directed to Hammah through the official contact channels published on the website.
+
+
+==================================================
+15. TERMS & CONDITIONS
+Route: /terms
+==================================================
+
+PAGE PURPOSE:
+Provide a structured terms shell for later legal review.
+
+PAGE TITLE:
+Terms & Conditions
+
+INTRO:
+These terms describe the basic conditions for using the SL by Hammah website and submitting order requests. Final legal wording requires formal review before production publication.
+
+
+SECTION: WEBSITE USE
+
+Draft:
+The website is provided to allow customers to discover Hammah products, access brand information, submit order requests, and use available account features.
+
+
+SECTION: ACCOUNTS
+
+Draft:
+Users are responsible for providing accurate account information and keeping their login credentials secure.
+
+
+SECTION: ORDER REQUESTS
+
+Draft:
+Submitting an order request does not necessarily mean payment has been completed or delivery has been confirmed. Hammah may contact the customer to confirm product availability, payment arrangements and fulfilment details.
+
+
+SECTION: PRICING
+
+Draft:
+Products may display a fixed price or a “Price on request” state. Final pricing is communicated through the website or directly by Hammah where required.
+
+
+SECTION: PAYMENT
+
+Draft:
+Payment may be arranged before delivery or on delivery depending on the order and the agreement made with Hammah.
+
+
+SECTION: DELIVERY
+
+Draft:
+Delivery arrangements, costs and timing are confirmed after an order request unless otherwise stated.
+
+
+SECTION: CANCELLATION
+
+Draft:
+Customers may be able to cancel a new order request before it has been confirmed. Orders already being processed may require direct communication with Hammah.
+
+
+SECTION: INTELLECTUAL PROPERTY
+
+Draft:
+Brand names, logos, photography, product imagery, copy and other website content remain the property of their respective rights holders and may not be reused without permission.
+
+
+SECTION: LIABILITY
+
+Placeholder:
+Final limitation-of-liability language requires legal review.
+
+
+SECTION: GOVERNING TERMS
+
+Placeholder:
+Final jurisdiction and governing-law wording requires legal review before launch.
+
+
+==================================================
+16. DELIVERY
+Route: /delivery
+==================================================
+
+PAGE PURPOSE:
+Explain the current assisted-delivery model clearly and honestly.
+
+PAGE INTRO
+
+Eyebrow:
+DELIVERY
+
+Headline:
+Delivery, arranged around the order.
+
+Body:
+Hammah currently serves customers in Accra and across Ghana.
+
+
+SECTION: HOW IT WORKS
+
+Step 1:
+Place your order request.
+
+Step 2:
+Hammah confirms the order with you.
+
+Step 3:
+Delivery details and cost are agreed.
+
+Step 4:
+Your order is prepared and sent when ready.
+
+
+SECTION: DELIVERY COST
+
+Headline:
+Quoted manually.
+
+Body:
+Delivery costs are confirmed after your order request based on the delivery location and arrangement.
+
+
+SECTION: DELIVERY METHODS
+
+Headline:
+Flexible fulfilment.
+
+Body:
+Delivery may be handled directly by Hammah or coordinated through a suitable courier service.
+
+
+SECTION: TIMING
+
+Headline:
+Timing is confirmed with you.
+
+Body:
+Hammah does not publish a universal delivery time because fulfilment depends on the order and delivery arrangement.
+
+
+SECTION: TRACKING
+
+Headline:
+Follow your order.
+
+Body:
+Guests can use the tracking details provided after their order request. Hamatees can also review orders inside The Hammah Legacy.
+
+CTA:
+Track Order
+
+
+==================================================
+17. RETURNS & REFUNDS
+Route: /returns
+==================================================
+
+PAGE PURPOSE:
+Provide a clear policy structure while avoiding invented final commercial terms.
+
+PAGE INTRO
+
+Eyebrow:
+RETURNS & REFUNDS
+
+Headline:
+Clear terms, before anything is final.
+
+Body:
+This page is the working structure for Hammah’s returns and refunds policy. Final operational terms must be approved before production launch.
+
+
+SECTION: ELIGIBILITY
+
+Placeholder copy:
+Final eligibility rules will state which items can be returned or exchanged and the applicable time period.
+
+
+SECTION: ITEM CONDITION
+
+Placeholder copy:
+Final policy wording will define the required condition for any returned item.
+
+
+SECTION: HOW TO REQUEST A RETURN
+
+Draft:
+Customers should contact Hammah using the official contact channel and provide the relevant order reference and reason for the request.
+
+
+SECTION: REFUNDS
+
+Placeholder copy:
+Final refund timing, method and eligibility requirements must be approved before publication.
+
+
+SECTION: EXCLUSIONS
+
+Placeholder copy:
+Any exclusions, including personalised, altered or otherwise non-returnable items, must be formally approved before publication.
+
+
+SECTION: DELIVERY COSTS
+
+Placeholder copy:
+Final responsibility for return delivery costs must be approved before publication.
+
+
+SECTION: NEED HELP?
+
+Body:
+If you have a question about an order, contact Hammah with your order reference.
+
+CTA:
+Track Order
+
+
+==================================================
+GLOBAL SEARCH CONTENT
+==================================================
+
+Search placeholder:
+Search Hammah
+
+Search empty state:
+No matching pieces found.
+
+Search suggestion:
+Try another product, category or collection.
+
+Search result groups:
+Products
+Collections
+Categories
+
+
+==================================================
+GLOBAL ORDER DRAWER / ORDER REQUEST CONTENT
+==================================================
+
+Drawer title:
+Order This Piece
+
+Intro:
+Confirm the piece and tell Hammah where to reach you.
+
+Fields:
+Name
+Phone / WhatsApp
+Email — optional
+Region
+City / Town
+Area
+Landmark
+GhanaPost GPS / Digital Address
+Delivery Notes
+
+Review heading:
+Review your request
+
+Review labels:
+Piece
+Size
+Quantity
+Price
+Delivery details
+
+Primary CTA:
+Place Order Request
+
+Secondary:
+Back
+
+Success headline:
+Your order request is in.
+
+Success body:
+Hammah has received your request. Your order reference and tracking details are ready below.
+
+CTA:
+Continue with Hammah on WhatsApp
+
+Secondary CTA:
+Track Order
+
+
+==================================================
+GLOBAL SAVED MICROCOPY
+==================================================
+
+Save:
+Save Piece
+
+Saved:
+Saved
+
+Remove:
+Remove from Saved
+
+Toast:
+Piece saved.
+
+Removed toast:
+Removed from Saved.
+
+
+==================================================
+GLOBAL AVAILABILITY COPY
+==================================================
+
+AVAILABLE:
+Available
+
+LIMITED:
+Limited
+
+UNAVAILABLE:
+Unavailable
+
+COMING_SOON:
+Coming soon
+
+
+==================================================
+GLOBAL PRICING COPY
+==================================================
+
+FIXED PRICE:
+Use approved final price only.
+
+PRICE ON REQUEST:
+Price on request
+
+
+==================================================
+GLOBAL ERROR COPY
+==================================================
+
+Generic:
+Something went wrong. Try again.
+
+Network:
+We couldn’t complete that request. Check your connection and try again.
+
+Order failure:
+We couldn’t place your order request. Your details are still here, so you can try again.
+
+Tracking failure:
+We couldn’t find an order with those details. Check the reference and tracking code and try again.
+
+Form required:
+This field is required.
+
+Invalid email:
+Enter a valid email address.
+
+Invalid phone:
+Enter a valid phone or WhatsApp number.
+
+
+==================================================
+GLOBAL EMPTY STATES
+==================================================
+
+No products:
+Nothing is available here yet.
+
+No saved items:
+Nothing saved yet.
+
+No orders:
+No orders yet.
+
+No search results:
+No matching results.
+
+No privilege:
+No active privilege right now.
+
+
+==================================================
+GLOBAL FOOTER
+==================================================
+
+Brand:
+SL by Hammah
+
+Positioning line:
+Considered essentials, cut for people who don’t dress for anyone else.
+
+Navigation:
+Shop
+Collections
+Our Story
+The Hammah Legacy
+
+Collections:
+Collection 001
+Kaftans
+African-made Footwear
+
+Support:
+Track Order
+Delivery
+Returns
+Size Guide
+
+Legal:
+Privacy Policy
+Terms & Conditions
+
+Social:
+Instagram
+WhatsApp
+
+Footer close:
+SL by Hammah
+
+
+==================================================
+FINAL AI-AGENT CONTENT RULES
+==================================================
+
+When implementing this content:
+
+1. Do not replace approved copy with generic marketing language.
+2. Do not invent facts to “make the page feel complete”.
+3. Keep placeholders where operational or legal information is not yet approved.
+4. Do not turn every short statement into a paragraph.
+5. Keep line breaks intentional in large editorial headlines.
+6. Preserve the distinction between:
+   - current orderable trousers
+   - future kaftans
+   - future African-made footwear
+7. Never create fake products for future categories.
+8. Never create fake final prices.
+9. Never make unapproved claims about fabric, sourcing, sustainability, craftsmanship or manufacturing.
+10. The copy should feel human, restrained and modern.
+11. The public website should feel like a fashion house, not a software product.
+12. The Hammah Legacy should feel like belonging, not a generic account dashboard.
+13. WhatsApp is a continuation channel, not the place where the order begins.
+14. Order tracking language should be simple and operational.
+15. Legal pages remain structured working drafts until formally reviewed.
+
+END OF CONTENT GUIDE

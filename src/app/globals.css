@@ -1,0 +1,348 @@
+@import "tailwindcss";
+
+/*
+ * SL by Hammah — Brand Tokens
+ * Ink: #111110
+ * Warm White: #F7F5F1
+ * Accent Brown: #7A5C3E
+ */
+
+/* ── Light Theme (default) ── */
+:root {
+  --background: #F7F5F1;
+  --foreground: #111110;
+  --surface: #FFFFFF;
+  --surface-elevated: #F0EDE8;
+  --muted: #E8E4DD;
+  --muted-foreground: #6B6560;
+  --border: #D6D0C8;
+  --accent: #79583A;
+  --accent-foreground: #F7F5F1;
+  --overlay: rgba(17, 17, 16, 0.6);
+}
+
+/* ── Dark Theme ── */
+[data-theme="dark"] {
+  --background: #111110;
+  --foreground: #F7F5F1;
+  --surface: #1A1918;
+  --surface-elevated: #242322;
+  --muted: #2E2D2B;
+  --muted-foreground: #9B9590;
+  --border: #3A3836;
+  --accent: #79583A;
+  --accent-foreground: #F7F5F1;
+  --overlay: rgba(0, 0, 0, 0.7);
+}
+
+/* ── Tailwind v4 Theme Extension ── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-overlay: var(--overlay);
+
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-instrument-serif);
+}
+
+/* ── Global Base ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* ── Visible Focus Ring ── */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Body Scroll Lock ── */
+body.menu-open {
+  overflow: hidden;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* ══════════════════════════════════════════
+   TYPOGRAPHY ELEVATION — Sprint 0.9
+   ══════════════════════════════════════════ */
+
+/* Hero headline: large, premium, editorial */
+.type-hero {
+  font-family: var(--font-instrument-serif);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+@media (min-width: 768px) {
+  .type-hero {
+    font-size: clamp(3.5rem, 7vw, 7.5rem);
+  }
+}
+
+/* Section statement: editorial lead text — ~2× CTA size */
+.type-statement {
+  font-family: var(--font-instrument-serif);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  font-size: clamp(1.85rem, 3vw, 2.75rem);
+}
+
+/* Section headline: confident serif — ~3× visual hierarchy over body */
+.type-headline {
+  font-family: var(--font-instrument-serif);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.75rem, 5vw, 5.5rem);
+}
+
+/* Eyebrow label */
+.type-eyebrow {
+  font-family: var(--font-dm-sans);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Body copy — generous for premium feel */
+.type-body {
+  font-family: var(--font-dm-sans);
+  font-weight: 400;
+  line-height: 1.65;
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+}
+
+/* CTA link — intentionally present */
+.type-cta {
+  font-family: var(--font-dm-sans);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+@media (min-width: 768px) {
+  .type-cta {
+    font-size: 1.125rem;
+  }
+}
+
+/* ══════════════════════════════════════════
+   ENGRAVED CTA SYSTEM
+   ══════════════════════════════════════════ */
+
+/* Primary CTA — engraved brown */
+.btn-engraved-primary {
+  position: relative;
+  overflow: hidden;
+  background: #79583A;
+  color: #F7F5F1;
+  transition: background 0.3s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn-engraved-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/hammah/global/buttons/cta-primary-engraving.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-engraved-primary:hover {
+  background: #896746;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-engraved-primary:hover::before {
+  transform: scale(1.04) translateX(-2px);
+  opacity: 0.7;
+}
+
+.btn-engraved-primary:active {
+  background: #684A31;
+  transform: translateY(0);
+}
+
+/* Secondary CTA — frosted glass with engraving */
+.btn-engraved-secondary {
+  position: relative;
+  overflow: hidden;
+  background: rgba(17, 17, 16, 0.42);
+  color: #F7F5F1;
+  border: 1px solid rgba(247, 245, 241, 0.36);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn-engraved-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/hammah/global/buttons/cta-secondary-engraving.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-engraved-secondary:hover {
+  background: rgba(17, 17, 16, 0.58);
+  border-color: rgba(247, 245, 241, 0.58);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-engraved-secondary:hover::before {
+  transform: scale(1.04) translateX(-2px);
+  opacity: 0.65;
+}
+
+/* ══════════════════════════════════════════
+   AVAILABILITY BADGE — Sprint 0.10
+   ══════════════════════════════════════════ */
+
+.availability-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(74, 118, 82, 0.10);
+  color: #456C4C;
+  border: 1px solid rgba(74, 118, 82, 0.22);
+  box-shadow: 0 0 18px rgba(74, 118, 82, 0.12);
+}
+
+[data-theme="dark"] .availability-badge {
+  background: rgba(132, 183, 138, 0.12);
+  color: #A5D3AA;
+  border: 1px solid rgba(165, 211, 170, 0.24);
+  box-shadow: 0 0 20px rgba(132, 183, 138, 0.10);
+}
+
+/* ══════════════════════════════════════════
+   EDITORIAL STATEMENT — Sprint 0.10
+   For story/legacy lead copy ~2× CTA
+   ══════════════════════════════════════════ */
+
+.type-editorial-statement {
+  font-family: var(--font-instrument-serif);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.85rem, 3vw, 2.75rem);
+}
+
+/* Hero-specific Title Style — tighter, ensures CTAs stay in viewport */
+.type-hero-statement {
+  font-family: var(--font-instrument-serif);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  font-size: clamp(2rem, 3.2vw, 3.75rem);
+}
+
+/* ── Product Card Swiper ── */
+.product-card-swiper .swiper-slide {
+  width: 100%;
+}
+
+.product-card-swiper .swiper-pagination {
+  bottom: 6px !important;
+}
+
+.product-card-swiper .swiper-pagination-bullet {
+  width: 4px;
+  height: 4px;
+  background: var(--muted-foreground);
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.product-card-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+  background: var(--foreground);
+  width: 12px;
+  border-radius: 2px;
+}
+
+/* ── Swiper Custom Styles ── */
+.collection-swiper .swiper-slide {
+  width: 82%;
+  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.collection-swiper .swiper-slide-active {
+  transform: scale(1);
+}
+
+.collection-swiper .swiper-pagination {
+  bottom: 12px !important;
+}
+
+.collection-swiper .swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  background: var(--muted-foreground);
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.collection-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+  background: var(--foreground);
+  width: 20px;
+  border-radius: 3px;
+}
