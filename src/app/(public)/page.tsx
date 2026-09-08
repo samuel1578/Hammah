@@ -1,4 +1,4 @@
-import { HomeHero } from "@/components/home/home-hero";
+import { HomeEditorialHero } from "@/components/home/home-editorial-hero";
 import { HomeCollection001 } from "@/components/home/home-collection";
 import { HomeHammahWorld } from "@/components/home/home-world";
 import { HomeDetailCraft } from "@/components/home/home-craft";
@@ -11,7 +11,7 @@ import { HomeClosing } from "@/components/home/home-closing";
 export default function HomePage() {
   return (
     <>
-      <HomeHero />
+      <HomeEditorialHero />
       <HomeCollection001 />
       <HomeHammahWorld />
       <HomeDetailCraft />

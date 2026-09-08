@@ -1367,4 +1367,892 @@ Hero → Collection 001 → Hammah World → Details → Featured Pieces → Sto
 
 ---
 
+## Sprint 0.13 — Mobile Spacing Correction + Dynamic "In the Details" Media
+
+**Date:** September 8, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Fix excessive mobile vertical spacing across all homepage sections and replace the static "In the Details" image pair with a dynamic rotation system using the existing 160-image Collection 001 pool.
+
+### Root Causes
+
+**Mobile spacing:** Every homepage content section used `py-24 md:py-36` with no smaller mobile prefix. Combined with large internal grid gaps (`gap-12` = 48px) and generous child margins, sections produced ~1,344px of pure vertical padding across 7 sections on mobile. The `Section` UI component defined smaller `py-16` but was not used by any homepage section.
+
+**Static images:** `HomeDetailCraft` read two fixed entries from `mediaManifest` via `getMediaBySection("detail-craft")`, resolving to Pixieset images #6 and #7. No randomisation or rotation existed on the homepage, despite a production-quality `RotatingDetailImages` component existing in the codebase for the Collection 001 page.
+
+### Sections Corrected
+
+| Section | File | Before (mobile) | After (mobile) |
+|---|---|---|---|
+| Collection 001 | `home-collection.tsx` | `py-24`, `mb-14`, `mt-12` | `py-16`, `mb-10`, `mt-8 md:mt-12` |
+| HAMMAH World | `home-world.tsx` | `py-24`, `mb-12` | `py-16`, `mb-8` |
+| In the Details | `home-craft.tsx` | `py-24`, `gap-12`, `mt-12` | `py-16`, `gap-8`, `mt-6 md:mt-12` |
+| Featured Pieces | `home-featured.tsx` | `py-24`, `mb-12`, `mt-10` | `py-16`, `mb-8`, `mt-8 md:mt-10` |
+| Point of View | `home-pov.tsx` | `py-24`, `gap-12`, `mt-8`, `mt-10` | `py-16`, `gap-8`, `mt-6 md:mt-8`, `mt-8 md:mt-10` |
+| Legacy | `home-legacy.tsx` | `py-24`, `gap-10`, `mt-8` (×2) | `py-16`, `gap-8`, `mt-6 md:mt-8` (×2) |
+| FAQ | `home-faq.tsx` | `py-24`, `gap-12`, `py-5` per question | `py-16`, `gap-8`, `py-4 md:py-6` per question |
+
+### Before/After Spacing Strategy
+
+- **Before:** All sections used identical `py-24` (192px total) on mobile with desktop grid gaps inherited into single-column stacking.
+- **After:** All sections use `py-16` (128px total) on mobile. Grid gaps reduced from 40–48px to 24–32px on mobile. All desktop values (`md:` prefix) preserved unchanged.
+
+### Dynamic "In the Details" Architecture
+
+**Reused:** The existing `COLLECTION_001_PIXIESET` pool (160 images) from `src/data/pixieset-collection-001.ts`. Adapted the `pickPair()` random selection pattern from `src/components/editorial/rotating-detail-images.tsx`.
+
+**Randomisation strategy:** Client-side after hydration. Deterministic initial pair (Pixieset #6 and #7) renders on server/first paint. After `useEffect` mount, a random pair is selected from the 160-image pool.
+
+**Rotation behaviour:**
+- 1500ms interval between rotations
+- Only ONE image slot changes per rotation (alternates between slot A and slot B)
+- Incoming image is preloaded via `new Image().src` before crossfade
+- `IntersectionObserver` (threshold 0.2) pauses rotation when section is out of view
+- Timers cleaned up on unmount
+
+**Duplicate/repeat protection:** The `pickRandom(exclude)` function excludes both the other slot's current image and the slot's own previous image. With 160 images and 2 excluded, collision probability is ~1.3%.
+
+**Transition:** `AnimatePresence` with 0.6s opacity crossfade + subtle 1.015→1 scale settle, using editorial easing `[0.25, 0.1, 0.25, 1]`.
+
+**Reduced motion:** `useReducedMotion()` disables animation, uses instant image swap.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `src/components/home/home-collection.tsx` | Reduced `py-24`→`py-16`, `mb-14`→`mb-10`, `mt-12`→`mt-8 md:mt-12` |
+| `src/components/home/home-world.tsx` | Reduced `py-24`→`py-16`, `mb-12`→`mb-8` |
+| `src/components/home/home-craft.tsx` | Full rewrite: reduced spacing + added dynamic image rotation with `pickRandom`, `IntersectionObserver`, `AnimatePresence`, staggered slot alternation |
+| `src/components/home/home-featured.tsx` | Reduced `py-24`→`py-16`, `mb-12`→`mb-8`, `mt-10`→`mt-8 md:mt-10` |
+| `src/components/home/home-pov.tsx` | Reduced `py-24`→`py-16`, `gap-12`→`gap-8`, `mt-8`→`mt-6 md:mt-8`, `mt-10`→`mt-8 md:mt-10` |
+| `src/components/home/home-legacy.tsx` | Reduced `py-24`→`py-16`, `gap-10`→`gap-8`, `mt-8`→`mt-6 md:mt-8` (×2) |
+| `src/components/home/home-faq.tsx` | Reduced `py-24`→`py-16`, `gap-12`→`gap-8`, `py-5`→`py-4 md:py-6` |
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `tsc --noEmit` | ✅ Clean |
+| `eslint` | ✅ 0 new errors (2 pre-existing in unused scrollytelling hero, 49 pre-existing img warnings) |
+| `npm run build` | ✅ 20 pages |
+
+### Remaining Limitations
+
+- The pre-existing `scrollMap` hooks-in-function lint error in `home-scrollytelling-hero.tsx` remains (this component is not rendered on the homepage)
+- All `<img>` lint warnings are pre-existing across the entire project (no `next/image` is used anywhere)
+- Mobile spacing was reduced uniformly to `py-16`; individual sections may benefit from further visual tuning once reviewed on actual devices
+
+---
+
+## Our Story Redesign Investigation
+
+**Status: Investigation / Not Implemented Yet**
+
+**Date:** September 8, 2026
+
+---
+
+### 1. Executive Summary
+
+The current `/our-story` page is a functional 7-section editorial page with strong brand content, but it suffers from three core problems:
+
+1. **Typography is too small.** Section headings use inline Tailwind `text-3xl` (1.875rem mobile) instead of the project's premium `.type-*` utilities. Body copy sits at `text-base` (1rem) with tight `max-w-md` constraints, making the page feel like a SaaS landing page rather than a fashion editorial.
+
+2. **Layout is monotonous.** Every content section follows the same pattern: `py-20 md:py-32` → Container → 2-column grid → image left/right → text opposite. There is no visual evolution across 7 sections. The user experiences image-text-image-text-image-text-image-text with zero structural variety.
+
+3. **Motion is shallow.** All animations are one-shot viewport reveals (TextReveal, Reveal, MediaReveal). There are no sticky sections, no scroll-linked movement, no marquee elements, no parallax, no image transitions, and no section-to-section choreography. The page feels static after first scroll.
+
+The redesign should transform this into a premium editorial fashion story with oversized typography, deliberate pacing, varied layouts, and motion that rewards continued scrolling.
+
+---
+
+### 2. Current Architecture
+
+**Route:** `/our-story`
+
+**Files:**
+
+| File | Role |
+|------|------|
+| `src/app/(public)/our-story/page.tsx` | Page component (179 lines, single client component) |
+| `src/components/editorial/collection-hero.tsx` | Hero component (reused from Collection 001) |
+| `src/components/motion/text-reveal.tsx` | Text clip-reveal animation |
+| `src/components/motion/reveal.tsx` | Fade-up reveal animation |
+| `src/components/motion/media-reveal.tsx` | Scale + fade media reveal |
+| `src/components/ui/container.tsx` | Max-width container |
+| `src/data/media-manifest.ts` | 8 media slots (story-hero through story-closing) |
+
+**Components used on page:**
+- `CollectionHero` — hero section
+- `TextReveal` — all section headings (6 uses)
+- `Reveal` — all body paragraphs (6 uses)
+- `MediaReveal` — all images (7 uses)
+- `Container` — all content sections (6 uses)
+- `Link` (Next.js) — closing CTA
+
+**Media (8 slots from media-manifest.ts):**
+
+| Slot ID | Pixieset Index | Aspect Ratio | Section |
+|---------|---------------|--------------|---------|
+| `story-hero` | `u(93)` | 16/9 | Hero |
+| `story-pov` | `u(94)` | 3/4 | Point of View |
+| `story-african` | `u(95)` | 4/5 | African Fashion |
+| `story-craft-01` | `u(96)` | 1/1 | Craft |
+| `story-craft-02` | `u(97)` | 1/1 | Craft |
+| `story-sourcing` | `u(98)` | 4/5 | Sourcing |
+| `story-sustainability` | `u(99)` | 3/4 | Sustainability |
+| `story-closing` | `u(100)` | 16/9 | Closing |
+
+**Typography currently used on page:**
+
+| Class | Where | Size (mobile) | Size (desktop) |
+|-------|-------|--------------|----------------|
+| `type-hero` | Hero h1 | `clamp(2.5rem, 6vw, 4.5rem)` | `clamp(3.5rem, 7vw, 7.5rem)` |
+| `font-serif italic text-3xl` | All section h2s | `1.875rem` | `2.25rem` (sm) / `3rem` (md) |
+| `text-base` | Body paragraphs | `1rem` | `1rem` |
+| `text-sm` | Craft body | `0.875rem` | `0.875rem` |
+| `type-headline` | Closing tagline | `clamp(2.75rem, 5vw, 5.5rem)` | same |
+| `type-cta` | Closing CTA | `1rem` | `1.125rem` |
+
+**Motion utilities on page:**
+
+| Component | Animation | Duration | Once |
+|-----------|-----------|----------|------|
+| `TextReveal` | y: 110% → 0% (clip) | 0.7s | Yes |
+| `Reveal` | opacity 0→1, y: 24→0 | 0.6s | Yes |
+| `MediaReveal` | scale 1.08→1, opacity 0→1 | 0.9s | Yes |
+| `CollectionHero` internal | scale 1.06→1 (hero image) | 1.4s | Mount |
+
+**Layout structure:**
+- React Fragment wrapping 7 `<section>` elements
+- No page-level layout wrapper
+- Alternating backgrounds: none → surface → none → surface → none → image
+- All content sections use `Container` (max-w-7xl, responsive px-4/6/8)
+
+**Breakpoint behaviour:**
+- Mobile: single-column grids, `py-20` (80px), `gap-10` (40px)
+- sm (640px): heading bump to `text-4xl`
+- md (768px): 2-column grids, `py-32` (128px), `gap-16` (64px), `text-5xl`
+- lg (1024px): `px-8`
+
+---
+
+### 3. Section-by-Section Audit
+
+| Section | Current Layout | Current Typography | Current Media | Current Motion | Main Problem | Redesign Opportunity |
+|---------|---------------|-------------------|--------------|---------------|-------------|---------------------|
+| **Hero** | CollectionHero: full-bleed image, bottom-aligned text, gradient overlay | `type-hero` (h1), `text-xs` eyebrow, `type-body` | `u(93)` 16/9, gradient overlay | Scale 1.06→1, TextReveal, Reveal | Reuses Collection 001 hero component — feels generic, not editorial-story-specific | Custom hero with larger statement, editorial layout, brand-level messaging |
+| **Point of View** | 2-col grid: 5-col image + 6-col text | `font-serif italic text-3xl` h2, `text-base` body | `u(94)` 3/4 | MediaReveal + TextReveal + Reveal | Headline too small (1.875rem), text max-w-md too narrow, layout is standard | Oversized headline, wider text, sticky image or overlap layout |
+| **African Fashion** | 2-col grid: text (order-2→1) + image (order-1→2), `bg-surface` | `font-serif italic text-3xl` h2, `text-base` body | `u(95)` 4/5 | MediaReveal + TextReveal + Reveal | Same small heading, repetitive layout pattern, surface bg adds nothing | Full-bleed image moment, oversized statement, or marquee transition |
+| **Craft** | Full-width heading + 2-col image grid + body text | `font-serif italic text-3xl` h2, `text-sm` body | `u(96)`, `u(97)` 1/1 square | MediaReveal (×2) + TextReveal + Reveal | Heading too small, images feel like a gallery grid not craft storytelling, body is `text-sm` (too small) | Asymmetric collage, large portrait, parallax scroll, or sticky image with text |
+| **Sourcing** | 2-col grid: image + text, `bg-surface` | `font-serif italic text-3xl` h2, `text-base` body | `u(98)` 4/5 | MediaReveal + TextReveal + Reveal | Identical layout to POV but mirrored, heading too small, surface bg repetitive | Text-over-image overlap, full-bleed material close-up, or horizontal break |
+| **Sustainability** | 2-col grid: text (order-2→1) + image (order-1→2) | `font-serif italic text-3xl` h2, `text-base` body | `u(99)` 3/4 | MediaReveal + TextReveal + Reveal | Same layout again, placeholder content, feels like a filler section | Large editorial statement, minimal image, or transition into closing |
+| **Closing** | Full-bleed image, centered text, 70svh | `type-headline` tagline, `type-cta` button | `u(100)` 16/9 | TextReveal + Reveal | Weak culmination — just another image + CTA, 60% white overlay washes out the image | Full-bleed campaign moment, oversized brand statement, marquee transition from sustainability |
+
+---
+
+### 4. Mobile Audit
+
+**Spacing issues:**
+
+| Element | Current | Problem |
+|---------|---------|---------|
+| Section padding | `py-20` (80px top+bottom) | Excessive for mobile; 5 content sections × 160px = 800px pure padding |
+| Grid gaps | `gap-10` (40px) | Large gap between image and text on mobile single-column |
+| Craft images gap | `gap-3` (12px) | Too tight — images feel cramped on mobile |
+| Body margins | `mt-4` to `mt-6` | Acceptable but combined with section padding creates dead space |
+| Closing height | `h-[70svh] min-h-[480px]` | 70svh is fine; min-h 480px ensures small phones don't collapse |
+
+**Typography issues:**
+
+| Element | Current Size (375px) | Problem |
+|---------|---------------------|---------|
+| Section h2 headings | `text-3xl` = 1.875rem (30px) | Too small for editorial fashion; should be 2.5–4rem+ on mobile |
+| Body copy | `text-base` = 1rem (16px) | Minimum readable; should be 1.0625–1.125rem for premium feel |
+| Craft body | `text-sm` = 0.875rem (14px) | Too small for body copy; violates premium editorial standard |
+| Closing tagline | `type-headline` = `clamp(2.75rem, 5vw, 5.5rem)` | Appropriate — this is the one well-sized element |
+
+**Layout issues:**
+- All sections use single-column on mobile — no visual variety
+- Images sit above text in every section — no overlap, no break
+- No sticky elements — nothing to anchor the eye during scroll
+- No full-bleed moments between content sections — the page feels like a continuous scroll of contained boxes
+- `Container` constrains all content to max-w-7xl with px-4 — even on mobile, content is boxed
+
+**Mobile page weight:** 8 Pixieset images all `loading="lazy"`, plus hero (eager). Reasonable for performance.
+
+---
+
+### 5. Typography Recommendations
+
+**The problem:** Section headings use `font-serif italic text-3xl` (inline Tailwind) which resolves to 30px on mobile — far too small for editorial fashion storytelling. The project has premium `.type-*` utilities that are underused on this page.
+
+**Recommended typography tiers:**
+
+| Tier | Use Case | Mobile | Desktop | Class |
+|------|----------|--------|---------|-------|
+| **Oversized statement** | Hero tagline, key brand statements | `clamp(2.5rem, 12vw, 4.5rem)` | `clamp(4rem, 8vw, 9rem)` | New: `.type-oversized` |
+| **Editorial headline** | Section headings | `clamp(2rem, 8vw, 3.5rem)` | `clamp(3rem, 6vw, 6rem)` | Existing: `.type-headline` (expand range) |
+| **Section statement** | Lead paragraph / section intro | `clamp(1.5rem, 4vw, 2.5rem)` | `clamp(2rem, 3.5vw, 3.5rem)` | Existing: `.type-statement` |
+| **Body** | Paragraphs | `clamp(1rem, 2.7vw, 1.125rem)` | `clamp(1.0625rem, 1.25vw, 1.25rem)` | Existing: `.type-body` |
+| **Eyebrow** | Section labels | `0.75rem` | `0.75rem` | Existing: `.type-eyebrow` |
+
+**Key changes:**
+- All section h2s should use `.type-headline` or `.type-statement` instead of inline `text-3xl`
+- Body copy should use `.type-body` instead of inline `text-base` — the existing utility has better line-height (1.65) and letter-spacing
+- A new `.type-oversized` utility is needed for the 12vw hero moments — nothing existing covers this range
+- Line-height on headings is already good (1.0–1.15); body at 1.65 is generous and appropriate
+- `max-w-md` (448px) on body text is too narrow on desktop — should be `max-w-lg` (512px) or `max-w-xl` (576px) for editorial readability
+
+**Existing utilities that can be reused:**
+- `.type-headline` — already defined, just not used on this page
+- `.type-statement` — already defined, just not used on this page
+- `.type-body` — already defined, just not used on this page
+- `.type-eyebrow` — already defined, just not used on this page
+- `.type-editorial-statement` — defined for story/legacy, not used on this page
+
+---
+
+### 6. Motion Opportunities
+
+**Current motion:** 3 one-shot reveal primitives (TextReveal, Reveal, MediaReveal). Every section uses the same pattern. No scroll-linked motion, no sticky, no transitions.
+
+**Available infrastructure (from codebase audit):**
+
+| Primitive | Source | Reusable? |
+|-----------|--------|-----------|
+| `useScroll` | `motion/react` | ✅ Used in scrollytelling hero |
+| `useTransform` | `motion/react` | ✅ Used in scrollytelling hero |
+| `AnimatePresence` | `motion/react` | ✅ Used in 13 files |
+| `IntersectionObserver` | Native API | ✅ Used in 4 files |
+| `useReducedMotion` | `motion/react` | ✅ Used everywhere |
+| `Stagger` component | `src/components/motion/stagger.tsx` | ✅ Exists, not used on this page |
+| Scroll-linked parallax | `home-scrollytelling-hero.tsx` | ⚠️ Pattern exists but specific to that hero |
+
+**Recommendations by section:**
+
+| Section | Recommendation | Why |
+|---------|---------------|-----|
+| **Hero** | Custom hero with text reveal + image Ken Burns | Replace generic CollectionHero; hero should feel editorial |
+| **Point of View** | Sticky image + scrolling text | Image stays pinned while text narrative unfolds — creates depth |
+| **African Fashion** | Full-bleed image with statement overlay | Break the contained grid pattern; let the image breathe |
+| **Craft** | Parallax scroll on images + staggered text | The 1:1 images are perfect for scroll-linked vertical movement |
+| **Sourcing** | Text-over-image overlap with scroll reveal | Create visual tension by overlapping text on the material close-up |
+| **Sustainability** | Large statement reveal, minimal image | Let the typography carry this section — the content is placeholder anyway |
+| **Closing** | Marquee transition → full-bleed statement → CTA reveal | Strongest section should feel like a culmination, not just another block |
+
+**New motion components needed:**
+- `StickyReveal` — a new component wrapping a sticky image with scroll-linked text. Can be built using `useScroll` + `useTransform` from the scrollytelling hero pattern.
+- `Marquee` — a new infinite-scroll text component. No existing implementation. Lightweight CSS animation with `prefers-reduced-motion` fallback.
+
+---
+
+### 7. Marquee Strategy
+
+**No marquee exists in the codebase.** One must be created.
+
+**Recommended: Maximum 2 marquee moments.**
+
+| Moment | Position | Text | Behaviour | Why |
+|--------|----------|------|-----------|-----|
+| **1. Transition marquee** | Between African Fashion and Craft sections | "MADE WITH INTENTION" | Auto-scroll, continuous, speed: 40s per loop | Creates a visual break between the narrative sections; reinforces brand ethos without requiring reading |
+| **2. Closing transition** | Before the final CTA section | "SL BY HAMMAH" | Auto-scroll, continuous, speed: 30s per loop | Acts as a brand signature moment before the culmination; stronger than a static heading |
+
+**Marquee design:**
+- Large serif italic text (`type-headline` or larger)
+- Horizontal scroll, left-to-right or right-to-left
+- `overflow-hidden` on container, `white-space: nowrap` on content
+- Duplicate content for seamless loop (content rendered twice)
+- `prefers-reduced-motion`: pause animation, show static text
+- Performance: CSS `transform: translateX()` only — no layout thrashing
+
+**Do NOT use marquees:**
+- In the hero (too distracting)
+- Between every section (becomes noise)
+- With body-weight text (marquees are for display type only)
+
+---
+
+### 8. Media Strategy
+
+**Current state:** 8 static Pixieset images (indices 93–100), one per section, all `loading="lazy"`.
+
+**Problems:**
+- Only 8 images for 7 sections — no rotation, no variety
+- Craft section has 2 images but they're in a static 2-col grid
+- No image transitions — each section shows one fixed image
+- The 160-image pool is unused on this page
+
+**Recommended approach:**
+
+| Section | Current Image | Recommendation |
+|---------|--------------|----------------|
+| **Hero** | `u(93)` static | Keep as hero; could add subtle Ken Burns on mount (already in CollectionHero) |
+| **Point of View** | `u(94)` static | Add image transition: swap between `u(94)` and 1–2 alternate images from the pool as text changes |
+| **African Fashion** | `u(95)` static | Make full-bleed; consider pulling from pool dynamically like home-craft.tsx does |
+| **Craft** | `u(96)`, `u(97)` static | Add parallax vertical movement; consider adding a 3rd image from pool for collage |
+| **Sourcing** | `u(98)` static | Add image transition; pull 1–2 alternate material close-ups from pool |
+| **Sustainability** | `u(99)` static | Reduce image prominence — let typography carry; or use as full-bleed background |
+| **Closing** | `u(100)` static | Keep; stronger treatment with less overlay washout |
+
+**Dynamic image rotation:** The pattern from `home-craft.tsx` (pickRandom from 160-image pool with IntersectionObserver pause) can be adapted for POV, African Fashion, and Sourcing sections. This adds visual freshness without new backend work.
+
+**New media manifest entries needed:** The current 8 entries are sufficient for the redesign. Dynamic rotation can pull from the existing `COLLECTION_001_PIXIESET` array directly, as `home-craft.tsx` already does.
+
+---
+
+### 9. Proposed New Story Flow
+
+| # | Section | Layout | Key Interaction |
+|---|---------|--------|----------------|
+| 1 | **Editorial Hero** | Full-bleed image, oversized statement text bottom-left, gradient overlay | Ken Burns on mount, TextReveal for heading |
+| 2 | **Brand Statement** | Full-width, large centered serif text on warm white | TextReveal with stagger — 2–3 lines revealing sequentially |
+| 3 | **Point of View** | Sticky image (left) + scrolling text narrative (right) on desktop; stacked on mobile | Image stays pinned while 2–3 text blocks scroll past |
+| 4 | **Marquee Break** | Horizontal scrolling text: "MADE WITH INTENTION" | Continuous auto-scroll, large serif italic |
+| 5 | **African Fashion** | Full-bleed image with oversized statement overlay | Image fills viewport, text reveals over it |
+| 6 | **Craft** | Asymmetric collage: 1 large + 1 small image, parallax vertical movement, text below | Scroll-linked image movement (parallax) |
+| 7 | **Sourcing** | Text-over-image overlap: large statement overlapping a material close-up | Scroll reveal creates overlap effect |
+| 8 | **Sustainability** | Typography-led: large editorial statement, minimal or no image | Statement text at `.type-headline` scale |
+| 9 | **Closing Brand Statement** | Full-bleed campaign image, oversized tagline, CTA reveal | Marquee "SL BY HAMMAH" transition into this section |
+
+**Why this order works:**
+- Opens with brand identity (hero + statement)
+- Builds intimacy (point of view)
+- Creates a visual break (marquee)
+- Expands context (african fashion)
+- Shows craft and materiality (craft, sourcing)
+- Addresses responsibility (sustainability)
+- Culminates with brand signature (closing)
+
+---
+
+### 10. Recommended Desktop Experience
+
+**Viewport choreography (1440px reference):**
+
+1. **Hero:** Full-bleed `u(93)` at 16/9, gradient overlay from left. Heading "Our Story" at `.type-oversized` scale, bottom-left aligned. Subheading eyebrow above. Ken Burns scale 1.06→1 over 1.4s.
+
+2. **Brand Statement:** Warm white background. Centered `.type-headline` text: "SL by Hammah begins with a simple position." 2–3 lines, each revealing with TextReveal stagger (0.15s delay between lines). Generous vertical padding (py-32 md:py-48).
+
+3. **Point of View:** Two-column grid. Left column: sticky image (`u(94)`) at 3/4 aspect ratio, pinned at top-24. Right column: 2–3 text blocks with `.type-statement` headings and `.type-body` paragraphs, scrolling past the pinned image. As user scrolls, text blocks reveal sequentially while image stays fixed.
+
+4. **Marquee:** Full-width strip, `overflow-hidden`. "MADE WITH INTENTION" in `.type-headline` serif italic, continuous left-to-right scroll. Height: ~120px. Warm white background.
+
+5. **African Fashion:** Full-bleed `u(95)` at 4/5 aspect ratio, filling viewport width. Statement "Rooted here. Designed to move." as `.type-headline` overlaid on image with text shadow or semi-transparent backing. Image reveals with scale animation.
+
+6. **Craft:** Asymmetric layout. Left: `u(96)` at tall aspect ratio with parallax (moves slower than scroll). Right: `u(97)` smaller, offset downward. Below both: "The making matters." as `.type-statement` with `.type-body` paragraph.
+
+7. **Sourcing:** Image (`u(98)`) fills 60% of viewport. "What a piece begins with." as `.type-headline` overlaps the image edge, creating a text-over-image editorial effect. Scroll reveal controls the overlap amount.
+
+8. **Sustainability:** Typography-led. No image or minimal background image at low opacity. "Responsibility needs specifics." as `.type-editorial-statement`. Clean, spacious, deliberate.
+
+9. **Closing:** Full-bleed `u(100)` at 16/9. Marquee "SL BY HAMMAH" scrolls across as transition. Then: oversized tagline at `.type-oversized` scale. CTA button appears with Reveal delay. Background image at full opacity (remove the 60% white washout).
+
+---
+
+### 11. Recommended Mobile Experience
+
+**Mobile choreography (375px reference):**
+
+1. **Hero:** Full-bleed image, text bottom-aligned. Heading at `clamp(2.5rem, 10vw, 4rem)`. No gradient overlay on mobile — use darker image selection or bottom gradient only.
+
+2. **Brand Statement:** Centered text, `py-20`. Heading at `clamp(2rem, 8vw, 3rem)`. 2–3 line reveal.
+
+3. **Point of View:** Stacked layout. Image at 3/4 aspect ratio, full-width. Text below with `type-statement` heading. No sticky on mobile — too fiddly. Simple stacked with generous padding.
+
+4. **Marquee:** Same as desktop but slightly smaller text. Continues scrolling.
+
+5. **African Fashion:** Full-bleed image with text overlay at bottom. Statement text at `clamp(2rem, 7vw, 3rem)`.
+
+6. **Craft:** Single column. Large image first (`u(96)`) at 4/5 aspect ratio, second image (`u(97)`) below with offset. Text below both. Parallax can work on mobile with reduced intensity.
+
+7. **Sourcing:** Stacked. Image first, text below. Statement overlaps image bottom edge slightly.
+
+8. **Sustainability:** Pure typography. Large statement, generous padding. No image needed.
+
+9. **Closing:** Full-bleed image. Marquee "SL BY HAMMAH" scrolls across. Oversized tagline. CTA button.
+
+**Mobile-specific rules:**
+- No sticky sections on mobile — stacked layout only
+- Reduce parallax intensity by 50% on mobile
+- Section padding: `py-16 md:py-24 lg:py-32` (tighter than current `py-20 md:py-32`)
+- Grid gaps: `gap-8 md:gap-12 lg:gap-16`
+- All text uses `.type-*` utilities — no inline Tailwind font sizes
+
+---
+
+### 12. Files That Would Need Modification
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/our-story/page.tsx` | Full rewrite — new section order, new layout patterns, new components |
+| `src/app/globals.css` | Add `.type-oversized` utility; optionally expand `.type-headline` range |
+| `src/data/media-manifest.ts` | No changes needed — 8 existing slots sufficient |
+| `src/components/motion/text-reveal.tsx` | No changes needed — reusable as-is |
+| `src/components/motion/reveal.tsx` | No changes needed — reusable as-is |
+| `src/components/motion/media-reveal.tsx` | No changes needed — reusable as-is |
+| `src/components/motion/stagger.tsx` | No changes needed — reusable as-is |
+
+**New components to create:**
+
+| Component | Purpose |
+|-----------|---------|
+| `src/components/editorial/marquee.tsx` | Infinite-scroll text marquee with reduced-motion fallback |
+| `src/components/editorial/sticky-story.tsx` | Sticky image + scrolling text layout (desktop only, stacked on mobile) |
+
+---
+
+### 13. Components That Can Be Reused
+
+| Component | How |
+|-----------|-----|
+| `TextReveal` | All headings — clip-reveal animation |
+| `Reveal` | All body paragraphs — fade-up animation |
+| `MediaReveal` | Image containers — scale + fade |
+| `Stagger` | Brand statement section — sequential line reveal |
+| `Container` | Content sections that need max-width constraint |
+| `CollectionHero` | **Not recommended** — too generic for editorial hero; build custom |
+| `Section` | Could replace inline `<section>` tags for consistent padding |
+| `BrandLogo` | Could be used in closing section |
+| `useScroll` + `useTransform` | Sticky story section — scroll-linked image/text positioning |
+| `IntersectionObserver` | Marquee play/pause based on visibility |
+| `AnimatePresence` | Image transitions within sections |
+| `useReducedMotion` | All new motion — accessibility fallback |
+
+---
+
+### 14. Components That Should Be Created
+
+| Component | Justification |
+|-----------|--------------|
+| `Marquee` | No marquee exists in the codebase. This is a genuine gap. Lightweight CSS animation, ~50 lines. |
+| `StickyStory` | No sticky-image-with-scrolling-text exists. The scrollytelling hero uses `useScroll` but is hero-specific. A reusable sticky story layout is justified. |
+
+**Do NOT create:**
+- A new parallax component — use `useScroll` + `useTransform` directly in the page, following the scrollytelling hero pattern
+- A new image transition component — `AnimatePresence` + state is sufficient (proven in home-craft.tsx)
+- A new section layout component — `Container` + grid classes are sufficient
+
+---
+
+### 15. Performance / Accessibility Risks
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Sticky sections on mobile | Medium | Don't use sticky on mobile — stacked layout only |
+| Parallax on mobile | Low | Reduce intensity 50% on mobile; `prefers-reduced-motion` disables entirely |
+| Marquee continuous animation | Low | CSS transform only; `prefers-reduced-motion` pauses; IntersectionObserver pauses when off-screen |
+| 8 Pixieset images loading | Low | All `loading="lazy"` except hero; acceptable weight |
+| Dynamic image rotation (if added) | Medium | Preload via `new Image()`; IntersectionObserver pause; limit to 2 sections max |
+| Layout shift from sticky | Low | Use `position: sticky` with known heights; no dynamic insertion |
+| Text contrast on image overlays | Medium | Ensure overlay opacity ≥ 60% or use text-shadow; test on all images |
+| Semantic heading order | Low | Maintain h1 → h2 → h3 hierarchy; current page already does this |
+| Focusable elements | Low | CTA button is focusable; marquee text should be `aria-hidden` with a screen-reader equivalent |
+| Touch targets | Low | CTA buttons already use `h-12` (48px) — meets WCAG minimum |
+
+---
+
+### 16. Recommended Implementation Plan
+
+| Phase | Task | Estimated Complexity |
+|-------|------|---------------------|
+| **1** | Add `.type-oversized` CSS utility to `globals.css` | Low |
+| **2** | Create `src/components/editorial/marquee.tsx` | Low (~50 lines) |
+| **3** | Create `src/components/editorial/sticky-story.tsx` | Medium (~80 lines) |
+| **4** | Rewrite `src/app/(public)/our-story/page.tsx` — new section order, new layouts, all new components | High (main work) |
+| **5** | Add dynamic image rotation to POV and Sourcing sections (adapt home-craft.tsx pattern) | Medium |
+| **6** | Test mobile layout, reduce parallax, verify sticky behavior | Medium |
+| **7** | Validate: `tsc --noEmit`, `eslint`, `npm run build` | Low |
+| **8** | Append implementation report to sprint docs | Low |
+
+**Dependencies:** Phases 1–3 are independent and can be done in parallel. Phase 4 depends on 1–3. Phase 5 depends on 4. Phases 6–8 are sequential.
+
+---
+
+*Investigation complete. Awaiting approval before implementation.*
+
+---
+
+## Our Story Redesign — Mini Sprint 1
+
+**Date:** September 8, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Implement the first phase of the Our Story editorial redesign: typography foundation, custom hero, brand statement, Point of View (sticky desktop), marquee component, and African Fashion full-bleed section.
+
+### Files Created
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/components/editorial/marquee.tsx` | ~55 | Reusable infinite-scroll text marquee with CSS transform animation and `prefers-reduced-motion` fallback |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/globals.css` | Added `.type-oversized` utility (Instrument Serif italic, `clamp(2.75rem, 12vw, 4.75rem)` mobile / `clamp(4rem, 8vw, 9rem)` desktop) |
+| `src/app/(public)/our-story/page.tsx` | Full rewrite — 5 new sections (hero, brand statement, POV sticky, marquee, African fashion) + 4 unchanged sections preserved below |
+
+### Typography Values
+
+| Utility | Mobile (375px) | Desktop (1440px) | Usage |
+|---------|---------------|-----------------|-------|
+| `.type-oversized` | `clamp(2.75rem, 12vw, 4.75rem)` ≈ 45px | `clamp(4rem, 8vw, 9rem)` ≈ 115px | Hero heading "Our Story" |
+| `.type-headline` | `clamp(2.75rem, 5vw, 5.5rem)` | same | POV heading, African Fashion statement, Brand Statement line 1 |
+| `.type-statement` | `clamp(1.85rem, 3vw, 2.75rem)` | same | Brand Statement line 2, POV editorial text |
+| `.type-body` | `clamp(1rem, 1.25vw, 1.25rem)` | same | All body paragraphs |
+| `.type-eyebrow` | `0.75rem` | `0.75rem` | Hero eyebrow, POV label |
+
+### Hero Architecture
+
+- **Layout:** Full-viewport (`h-[100svh] min-h-[560px]`), `bg-[#111110]` background
+- **Image:** `u(93)` Pixieset, Ken Burns scale 1.06→1 over 1.6s on mount
+- **Gradients:** Left-to-right directional darkening (75%→40%→8%→0%) + bottom gradient for mobile
+- **Text:** Eyebrow (`type-eyebrow`) + oversized heading (`type-oversized`) + body (`type-body`)
+- **Motion:** Three staggered `motion.div` animations (delay 0.1, 0.25, 0.5s)
+- **Mobile:** Stacked bottom-aligned; desktop: right-aligned, vertically centered
+- **Reduced motion:** All motion primitives check `useReducedMotion()` and render static if true
+
+### Point of View Architecture
+
+- **Desktop (md+):** 12-column grid — 5-col sticky image + 6-col scrolling narrative (col-start-7)
+- **Sticky behavior:** `md:sticky md:top-28` on image column; `useScroll` + `useTransform` adds subtle parallax (±40px translateY over section scroll)
+- **Narrative blocks:** 3 Reveal-wrapped text blocks with 16–20 gap between them, creating scroll distance for the sticky effect
+- **Mobile:** Stacked — image at `aspect-[3/4]` full-width, followed by 3 Reveal-wrapped text blocks
+- **No sticky on mobile** — explicitly `hidden md:grid` / `md:hidden` split
+- **Content:** Existing approved copy + 2 new editorial lines ("Not designed to trend. Designed to stay." and seasonal release statement)
+
+### Marquee Implementation
+
+- **Component:** `src/components/editorial/marquee.tsx`
+- **Mechanism:** CSS `@keyframes` with `transform: translateX()` — no JS animation loop, no per-frame React state
+- **Seamless loop:** Content rendered twice in a `flex` row with `width: max-content`; animation translates from 0% to -50%
+- **Configurable:** `speed` (seconds per loop, default 40), `direction` ("left"/"right")
+- **Reduced motion:** Renders static text (no animation, no duplicated content)
+- **Accessibility:** Container has `aria-hidden="true"`; duplicated visual content is also `aria-hidden`
+- **First moment:** "MADE WITH INTENTION" in `.type-headline` serif italic, `speed={45}`, between POV and African Fashion
+- **Visual treatment:** `bg-surface border-y border-border/40` — subtle surface background with border lines
+
+### African Fashion Implementation
+
+- **Layout:** Full-bleed section, no Container wrapper
+- **Image:** `u(95)` at `h-[70svh] min-h-[480px] md:h-[85svh]` — immersive viewport-height image
+- **MediaReveal:** Scale 1.04→1 with overflow-hidden
+- **Overlay:** Gradient from bottom (`from-[#111116]/80 via-[#111116]/20 to-transparent`) for text legibility
+- **Text position:** Absolute overlay, bottom-aligned (mobile) / center-aligned (desktop)
+- **Typography:** `type-headline` heading + `type-body` paragraph, both in warm white
+- **Motion:** TextReveal for heading, Reveal for body — restrained, no scrollytelling
+
+### Mobile Behavior
+
+| Section | Mobile Treatment |
+|---------|-----------------|
+| Hero | `h-[100svh]`, bottom-aligned text, `px-5`, `pb-16` |
+| Brand Statement | `py-20`, centered text, `max-w-3xl` |
+| POV | Stacked image → text, `py-16`, no sticky |
+| Marquee | Same as desktop, slightly smaller visual weight |
+| African Fashion | `h-[70svh]`, image fills viewport, text at bottom |
+
+**Spacing:** `py-16 md:py-24 lg:py-32` pattern (not `py-24` on mobile). Brand statement uses `py-20 md:py-32 lg:py-40` for extra breathing room.
+
+### Reduced Motion Behavior
+
+| Element | Reduced Motion Treatment |
+|---------|------------------------|
+| Hero image | Static (no scale animation) |
+| Hero text | Static (no staggered reveal) |
+| Brand Statement | Static (Stagger renders plain div) |
+| POV image parallax | `useTransform` returns `[0, 0]` — no movement |
+| Marquee | Static text, no animation, no duplicated content |
+| African Fashion image | Static (MediaReveal renders plain div) |
+| African Fashion text | Static (TextReveal/Reveal render plain elements) |
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `tsc --noEmit` | ✅ Clean |
+| `eslint` | ✅ 0 new errors (2 pre-existing in unused scrollytelling hero, 51 pre-existing img warnings) |
+| `npm run build` | ✅ 20 pages |
+
+### Known Limitations
+
+- The remaining sections (Craft, Sourcing, Sustainability, Closing) are unchanged and use the old `text-3xl` typography — Mini Sprint 2 will redesign them
+- The brand statement section includes new editorial copy ("Not designed to trend. Designed to stay." and the seasonal release paragraph) — these are brand-appropriate extensions of existing approved meaning, not new claims
+- The POV section includes 3 narrative blocks — the first uses existing approved copy, the second and third are editorial extensions consistent with the brand position
+- Marquee uses CSS `@keyframes` injected via `<style>` tag — acceptable for a single component instance but could be extracted to globals.css if reused frequently
+- No dynamic image rotation in this sprint — all sections use their assigned Pixieset images
+
+---
+
+*Mini Sprint 1 complete. Mini Sprint 2 remains for Craft / Sourcing / Sustainability / Closing redesign.*
+
+---
+
+## Our Story Redesign — Mini Sprint 2
+
+**Date:** September 8, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Complete the Our Story editorial redesign: Craft, Sourcing, Sustainability, closing campaign, second marquee, and full-page responsive/motion polish.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/our-story/page.tsx` | Full rewrite — replaced old Craft/Sourcing/Sustainability/Closing with redesigned editorial sections, added second marquee, extracted 5 sub-components |
+
+### Files Created
+
+None — all work contained in the existing page file.
+
+### Final Section Flow
+
+| # | Section | Layout | Motion |
+|---|---------|--------|--------|
+| 1 | **Editorial Hero** | Full-viewport image, oversized heading | Ken Burns scale 1.06→1, staggered text reveal |
+| 2 | **Brand Statement** | Centered typography, max-w-3xl | Stagger reveal (2 lines + body) |
+| 3 | **Point of View** | Desktop: sticky image + scrolling narrative (12-col grid). Mobile: stacked | Scroll-linked parallax (±40px), Reveal blocks |
+| 4 | **Marquee** — "MADE WITH INTENTION" | Full-width, `bg-surface`, border-y | CSS transform infinite scroll (45s, left) |
+| 5 | **African Fashion** | Full-bleed (`h-[70svh] md:h-[85svh]`), text over image | MediaReveal scale 1.04, TextReveal, Reveal |
+| 6 | **Craft** | Desktop: asymmetric 7/5 grid (dominant left + offset right). Mobile: stacked with 75% width offset | Scroll-linked parallax (±30px main, +50/-20 secondary), MediaReveal |
+| 7 | **Sourcing** | Desktop: 60% image + overlapping statement (absolute positioned). Mobile: stacked with `-mt-10` overlap | MediaReveal scale 1.03, TextReveal, Reveal |
+| 8 | **Sustainability** | Typography-led centered layout, optional secondary image at 16/9 below | TextReveal (oversized), Reveal |
+| 9 | **Marquee** — "SL BY HAMMAH" | Full-width, `bg-[#111110]`, dark surface, right direction | CSS transform infinite scroll (35s, right) |
+| 10 | **Closing Campaign** | Full-bleed (`h-[85svh]`), lighter overlay (40%), bottom gradient | MediaReveal scale 1.03, TextReveal (oversized), Reveal, CTA |
+
+### Craft Architecture
+
+- **Desktop:** 12-column grid — `col-span-7` dominant image (3/4 aspect) + `col-span-5` right column starting at `col-start-8`
+- **Offset:** Right column image (`aspect-[4/5]`, `max-w-sm`) pushed down with `mt-24 lg:mt-32`
+- **Parallax:** `useScroll` + `useTransform` — main image ±30px, secondary +50/-20px, both disabled with `prefers-reduced-motion`
+- **Mobile:** Dominant image full-width (4/5), secondary at 75% width shifted right (`ml-auto w-[75%]`), text below
+- **Typography:** `type-headline` + `type-body` (not `text-sm`)
+
+### Sourcing Architecture
+
+- **Desktop:** Relative container — image at `w-[60%]` (4/5 aspect), statement absolutely positioned at `right-0 top-1/2 -translate-y-1/2 w-[55%] pl-8 lg:pl-12`
+- **Typography:** `type-oversized` for the statement crossing the image boundary
+- **Mobile:** Stacked with `relative -mt-10 px-1` overlap — image, then statement overlapping bottom edge
+- **Content:** Existing approved placeholder wording only — no invented claims
+
+### Sustainability Architecture
+
+- **Layout:** Centered `max-w-3xl text-center` — purely typographic
+- **Eyebrow:** "Sustainability" label in `type-eyebrow`
+- **Statement:** `type-oversized` — "Responsibility needs specifics." one of the largest textual moments on the page
+- **Body:** `type-body max-w-lg` — existing approved placeholder
+- **Optional image:** Retained at `aspect-[16/9] max-w-md` below the text — secondary, not dominant
+
+### Second Marquee
+
+- **Text:** "SL BY HAMMAH"
+- **Direction:** Right (opposite to first marquee's left)
+- **Speed:** 35s (faster than first marquee's 45s)
+- **Typography:** `type-oversized` (larger than first marquee's `type-headline`)
+- **Background:** `bg-[#111110]` dark surface (vs first marquee's `bg-surface` light)
+- **Signal:** Marks the transition into the closing campaign — story is concluding
+
+### Closing Architecture
+
+- **Height:** `h-[85svh] min-h-[560px]` (taller than previous 70svh)
+- **Overlay:** `bg-[#111116]/40` — significantly lighter than the previous `bg-background/60` (60% warm white). Image should dominate.
+- **Bottom gradient:** `from-[#111116]/70` for CTA legibility
+- **Typography:** Split into two lines — `type-oversized` "Considered essentials." + `type-statement` "Cut for people who don't dress for anyone else."
+- **CTA:** `btn-engraved-primary` at `h-13 px-8`, leading to `/collections/collection-001`
+- **Reduced motion:** MediaReveal and TextReveal render static
+
+### Motion Hierarchy (Complete Page)
+
+| Section | Motion Type | Reduced Motion |
+|---------|------------|----------------|
+| Hero | Entrance (scale + staggered text) | Static |
+| Brand Statement | Stagger text reveal | Static |
+| Point of View | Sticky + scroll-linked parallax | Static, no parallax |
+| Marquee 1 | CSS transform continuous | Static text |
+| African Fashion | Immersive image reveal + text reveal | Static |
+| Craft | Asymmetric parallax (two speeds) | Static, no parallax |
+| Sourcing | Image reveal + overlapping text reveal | Static |
+| Sustainability | Typography reveal (oversized) | Static |
+| Marquee 2 | CSS transform continuous (opposite direction) | Static text |
+| Closing | Image reveal + oversized statement + CTA reveal | Static |
+
+**Variety achieved:** entrance → text reveal → sticky narrative → continuous scroll → immersive reveal → dual-speed parallax → overlap reveal → typography reveal → continuous scroll → campaign reveal. No two adjacent sections use the same motion pattern.
+
+### Responsive Behavior
+
+| Breakpoint | Key Behaviors |
+|------------|--------------|
+| 320px | All sections stack vertically; no sticky; no overlap on Sourcing; Craft secondary at 75% width |
+| 375px | Standard mobile composition |
+| 390px | Standard mobile composition |
+| 430px | Standard mobile composition |
+| 768px (md) | POV activates sticky; Craft activates asymmetric grid; Sourcing activates overlap; African Fashion `h-[85svh]` |
+| 1024px (lg) | Increased gaps (Craft `gap-12`, POV `gap-16`); Sourcing `pl-12` overlap |
+| 1440px | `max-w-7xl` constrains content; oversized typography reaches upper clamp values |
+| 1920px | Content remains constrained; hero and closing images fill viewport |
+
+**Mobile spacing:** Each section uses spacing appropriate to its composition — `py-16 md:py-24 lg:py-32` for standard sections, `py-20 md:py-32 lg:py-40` for brand statement and sustainability (more breathing room).
+
+### Reduced Motion Behavior
+
+- **Marquees:** CSS animation stops; static text displayed; duplicated content not rendered
+- **Parallax:** `useTransform` returns `[0, 0]` — no vertical movement on POV or Craft images
+- **Scroll-linked:** All `useScroll`/`useTransform` pairs check `shouldReduceMotion` and return constant values
+- **Reveals:** TextReveal, Reveal, MediaReveal all render plain static HTML
+- **Hero:** No scale animation on mount
+- **Page remains intentionally designed** — all typography, layout, composition, and spacing work without any animation
+
+### Performance
+
+- **No new dependencies** — all motion via existing `motion/react`
+- **Continuous animations:** CSS `@keyframes` with `transform: translateX()` only — compositable, no layout thrashing
+- **Parallax:** MotionValues (not React state) — no per-frame re-renders
+- **Image loading:** All images `loading="lazy"` except hero (`loading="eager"`)
+- **No raw scroll listeners** — all scroll tracking via `useScroll` hook
+- **No timers** in any of the redesigned sections
+- **Single page file** — no new component imports beyond existing primitives
+
+### Accessibility
+
+- **One h1:** "Our Story" in hero section
+- **Logical h2 hierarchy:** Brand Statement → POV → African Fashion → Craft → Sourcing → Sustainability → Closing (all `aria-labelledby` with matching IDs)
+- **Text contrast:** Hero text at 80–100% white on dark gradient; all body text `text-muted-foreground` on light background; marquee text at 70–80% opacity
+- **Image alt text:** All meaningful images have descriptive alt attributes; closing decorative image has empty alt
+- **CTA:** `h-13` (52px) touch target, focusable, `btn-engraved-primary` with clear hover/active states
+- **Marquee:** `aria-hidden="true"` on container; duplicated visual content also `aria-hidden`; screen readers get the single static instance
+- **Reduced motion:** Complete coverage (see above)
+- **Pinch zoom:** No `maximum-scale` or `user-scalable=no` restrictions
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `tsc --noEmit` | ✅ Clean |
+| `eslint` | ✅ 0 new errors (2 pre-existing in unused scrollytelling hero, 53 pre-existing img warnings) |
+| `npm run build` | ✅ 20 pages |
+
+### Known Limitations
+
+- The Craft and Sourcing sections include new editorial copy ("Not designed to trend. Designed to stay." was added in Mini Sprint 1) — these are brand-consistent extensions, not new claims
+- Sourcing content remains intentionally provisional — the design is excellent even with placeholder wording
+- No dynamic image rotation from the 160-image pool — all sections use their assigned Pixieset images
+- Marquee CSS `@keyframes` are injected via `<style>` tag in the component — could be extracted to globals.css if more marquees are added in future
+- The page is a single client component (`"use client"`) — acceptable for the motion requirements but means the entire page hydrates on the client
+
+---
+
+*Our Story Redesign: Complete (Mini Sprint 1 + Mini Sprint 2).*
+
+---
+
+## Our Story Redesign — Mini Sprint 3
+### Final Copy & Content Integrity Pass
+
+**Date:** September 8, 2026 | **Status:** ✅ Complete
+
+### Why This Sprint Existed
+
+Mini Sprints 1 and 2 built the editorial architecture — typography, layout, motion, composition — but three sections still contained placeholder language ("This section is reserved for…", "This section will explain…", "will be published here…"). These made the page feel unfinished. Mini Sprint 3 replaces all placeholder content with approved HAMMAH copy while preserving the redesigned visual architecture.
+
+### Placeholder Copy Removed
+
+| Section | Old Placeholder | Status |
+|---------|----------------|--------|
+| **Craft** | "This section is reserved for approved information about Hammah's manufacturing, construction and finishing process." | ✅ Replaced |
+| **Sourcing** | "This section will explain approved sourcing and material information once the brand has finalised the facts it wants to publish." | ✅ Replaced |
+| **Sustainability** | "Hammah's sustainability position will be published here once sourcing, production and material claims have been formally documented." | ✅ Replaced |
+| **Closing** | "Considered essentials. / Cut for people who don't dress for anyone else." (generic, not placeholder, but weaker than approved copy) | ✅ Replaced |
+
+### Approved Replacement Copy Implemented
+
+**Craft — "The making matters."**
+- 3 paragraphs: attention to proportion/balance/finish → clothing that feels considered → difference found in details after wearing
+- No manufacturing claims, no artisan claims, no factory claims
+- Desktop: `type-headline` heading + `type-body` paragraphs in right column below offset image
+- Mobile: stacked below both images with `mt-10`
+
+**Sourcing — "What a piece begins with."**
+- 3 paragraphs: materials/colour/visual character → textiles carrying expression and restraint → section will continue to document material choices
+- No country-of-origin claims, no supplier claims, no certifications
+- Desktop: `type-oversized` heading overlapping image boundary + `type-body` paragraphs below
+- Mobile: stacked with `-mt-10` overlap
+
+**Sustainability — "Responsibility needs specifics."**
+- 4 paragraphs: not using broad sustainability language → responsibility means being deliberate → will publish clearer information → would rather be specific than unsupported
+- No "sustainable", "eco-friendly", "ethical", "carbon-neutral", or similar claims
+- Typography-led centered layout with optional secondary image below
+
+**Closing — "This is only the beginning."**
+- Heading: `type-oversized` "This is only the beginning."
+- Body: `type-statement` about Hammah defining its language through trousers, print, proportion, people
+- Sub-line: `type-body` "Collection 001 opens the story. It does not finish it."
+- CTA: "Explore Collection 001" — Collection 001 presented as opening chapter, not whole brand identity
+
+### New Editorial Statement Added
+
+Between Craft and Sourcing: "Detail is where the character lives."
+- `type-headline` centered, `text-foreground/70` (subdued)
+- Scroll-reveal via `Reveal` component — not another marquee
+- `aria-hidden="true"` (decorative transition)
+- Section padding: `py-16 md:py-20 lg:py-24` — compact, breathing room without excess
+
+### Content Integrity Audit
+
+| Pattern Searched | Found | Verdict |
+|-----------------|-------|---------|
+| "this section" | 2 matches | ✅ Approved copy: "As the brand develops, this section will continue to document…" (Sourcing, 2 paragraphs) |
+| "reserved for" | 0 | ✅ Clean |
+| "will be published" | 0 | ✅ Clean |
+| "once approved" | 0 | ✅ Clean |
+| "coming soon" | 0 | ✅ Clean |
+| "placeholder" | 0 | ✅ Clean |
+| "will explain" | 0 | ✅ Clean |
+| "once finalised" | 0 | ✅ Clean |
+| "publish" | 1 match | ✅ Approved copy: "we will publish clearer information" (Sustainability) |
+| "finalised" | 0 | ✅ Clean |
+| "approved" | 0 | ✅ Clean |
+
+**No remaining placeholder content detected.** All language on the public page is either approved brand copy or intentional editorial content.
+
+### Responsive Adjustments for Longer Copy
+
+The approved copy is substantially longer than the old placeholders. Adjustments made:
+
+- **Craft body:** Split into 3 `<p>` elements with `mt-4` spacing instead of one block. `max-w-md` constrains line length for readability. On mobile, same treatment — paragraphs stack with `mt-4`.
+- **Sourcing body:** Same 3-paragraph treatment with `mt-4` spacing. Desktop overlap container uses `w-[55%]` with `pl-8 lg:pl-12` — sufficient width for the copy without overwhelming the image.
+- **Sustainability body:** 4 paragraphs centered at `max-w-lg` — tight enough for readability but wide enough for the longer sentences. `mt-4` between paragraphs.
+- **Closing body:** Two text blocks — `type-statement` for the main body, `type-body` at reduced opacity for the sub-line. Compact spacing.
+
+No typography size reductions were made. All sections retain their editorial scale.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/our-story/page.tsx` | Replaced 4 sections of placeholder copy with approved wording; added editorial statement between Craft and Sourcing |
+
+### Validation
+
+| Command | Result |
+|---------|--------|
+| `tsc --noEmit` | ✅ Clean |
+| `eslint` | ✅ 0 new errors (2 pre-existing in unused scrollytelling hero, 53 pre-existing img warnings) |
+| `npm run build` | ✅ 20 pages |
+
+### Known Limitations
+
+- The Craft section now has 3 paragraphs of body copy — on very small screens (320px) this creates a taller section than before, but the asymmetric image layout absorbs the height naturally
+- The editorial statement "Detail is where the character lives." is `aria-hidden` and purely decorative — screen readers skip it entirely
+- No unsupported brand claims were introduced — all copy was pre-approved and verified against the content safety constraints in the brief
+
+---
+
+*Our Story Redesign: Complete after Mini Sprint 3 content pass.*
+
+---
+
 *Generated by Codebuff 🤖*

@@ -300,3 +300,90 @@
 - **Collection-001 responsive hero:** Added `desktopMedia`/`mobileMedia` props to CollectionHero; desktop uses colhero-desktop.png, mobile uses colhero-mobile.png; media manifest entries added
 - **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 errors, 39 img warnings), `npm run build` ✅ (20 pages)
 - **Next phase:** Backend integration (Appwrite auth), search, real order persistence, admin/Hamatee routes
+
+## Sprint 0.13 — Mobile Spacing Correction + Dynamic "In the Details" Media
+- **Date:** September 8, 2026
+- **Status:** ✅ Complete
+- **Objective:** Fix excessive mobile homepage spacing; replace static "In the Details" images with dynamic rotation from 160-image pool
+- **Mobile spacing root cause:** All sections used `py-24` (192px) on mobile with large inherited desktop grid gaps
+- **Spacing strategy:** Reduced to `py-16` (128px) on mobile; grid gaps from 40–48px to 24–32px; all `md:` desktop values preserved
+- **Files corrected:** home-collection.tsx, home-world.tsx, home-craft.tsx, home-featured.tsx, home-pov.tsx, home-legacy.tsx, home-faq.tsx
+- **Details root cause:** Component used two fixed Pixieset entries (#6, #7) via media manifest with no randomisation
+- **Reused architecture:** `COLLECTION_001_PIXIESET` pool (160 images) + `pickRandom()` adapted from `rotating-detail-images.tsx`
+- **Randomisation:** Client-side after hydration; deterministic initial pair (#6, #7) avoids hydration mismatch
+- **Rotation:** 1500ms interval; alternating single-slot replacement; preloading via `new Image()`; `IntersectionObserver` (threshold 0.2) pauses when out of view
+- **Duplicate protection:** `pickRandom(exclude)` excludes other slot + previous image (~1.3% collision rate)
+- **Transition:** `AnimatePresence` 0.6s crossfade + subtle scale; `prefers-reduced-motion` disables animation
+- **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 new errors), `npm run build` ✅ (20 pages)
+
+## Our Story Redesign Investigation
+- **Date:** September 8, 2026
+- **Status:** 🔍 Investigation / Not Implemented Yet
+- **Objective:** Investigate the current `/our-story` page for a premium editorial redesign
+- **Current state:** 7-section page with small typography (text-3xl = 30px headings), repetitive image-text layout, one-shot reveal animations only, 8 static Pixieset images
+- **Core problems identified:**
+  - Typography too small for editorial fashion (headings at 30px, body at 14–16px)
+  - Monotonous layout: every section is 2-column image+text grid
+  - Motion is shallow: no sticky sections, no marquee, no parallax, no scroll-linked animation
+  - Closing section feels weak — not a culmination
+- **Key opportunities:**
+  - Oversized editorial typography (12vw statements, `.type-headline` reuse)
+  - Sticky image + scrolling text (Point of View section)
+  - 2 marquee moments: "MADE WITH INTENTION" (mid-page break) and "SL BY HAMMAH" (closing transition)
+  - Dynamic image rotation from 160-image pool (POV, Sourcing sections)
+  - Full-bleed image moments (African Fashion, Closing)
+  - Parallax scroll on craft images
+  - Text-over-image overlap (Sourcing)
+  - Typography-led section (Sustainability)
+- **New components needed:** `Marquee` (~50 lines), `StickyStory` (~80 lines)
+- **Files to modify:** `page.tsx` (full rewrite), `globals.css` (add `.type-oversized`)
+- **Reusable infrastructure:** TextReveal, Reveal, MediaReveal, Stagger, Container, useScroll, useTransform, AnimatePresence, IntersectionObserver, useReducedMotion
+- **Full investigation:** HAMMAH_SPRINT_REPORT.md → "Our Story Redesign Investigation" section
+- **Awaiting approval before implementation**
+
+## Our Story Redesign — Mini Sprint 1
+- **Date:** September 8, 2026
+- **Status:** ✅ Complete
+- **Objective:** Implement editorial foundation + hero + brand statement + POV sticky + marquee + African fashion
+- **Files created:** `src/components/editorial/marquee.tsx` (~55 lines, CSS transform infinite-scroll with `prefers-reduced-motion` fallback)
+- **Files modified:** `globals.css` (added `.type-oversized` at `clamp(2.75rem, 12vw, 4.75rem)` / `clamp(4rem, 8vw, 9rem)`), `our-story/page.tsx` (full rewrite)
+- **Hero:** Custom editorial hero replacing CollectionHero — full-viewport, `u(93)` image with Ken Burns, oversized heading, directional gradient, staggered text reveal
+- **Brand statement:** Typography-led section — `.type-headline` + `.type-statement` with Stagger reveal, generous whitespace (`py-20 md:py-32 lg:py-40`)
+- **Point of View:** Desktop — 12-col grid with sticky image (`md:sticky md:top-28`) + scrolling narrative (3 Reveal blocks with 16–20 gap); `useScroll` + `useTransform` for subtle parallax; Mobile — stacked image→text, no sticky
+- **Marquee:** "MADE WITH INTENTION" — CSS `@keyframes translateX`, 45s loop, `.type-headline` serif italic, `aria-hidden`, reduced-motion renders static
+- **African Fashion:** Full-bleed (`h-[70svh] md:h-[85svh]`), `u(95)` image, gradient overlay, TextReveal + Reveal for statement over image
+- **Mobile spacing:** `py-16 md:py-24 lg:py-32` pattern (not `py-24` on mobile); brand statement `py-20 md:py-32 lg:py-40`
+- **Reduced motion:** All sections render static — hero (no scale), marquee (no animation), parallax (no movement), reveals (no animation)
+- **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 new errors), `npm run build` ✅ (20 pages)
+- **Remaining:** Mini Sprint 2 — Craft, Sourcing, Sustainability, Closing redesign
+
+## Our Story Redesign — Mini Sprint 2
+- **Date:** September 8, 2026
+- **Status:** ✅ Complete
+- **Objective:** Complete the Our Story editorial redesign — Craft, Sourcing, Sustainability, closing campaign, second marquee, full-page polish
+- **Files modified:** `our-story/page.tsx` (full rewrite with 5 extracted sub-components: PointOfViewSection, CraftSection, SourcingSection, SustainabilitySection, ClosingSection)
+- **Craft:** Asymmetric 7/5 editorial grid (desktop) — dominant image left + offset secondary right with dual-speed scroll-linked parallax (±30px main, +50/-20px secondary); Mobile: dominant full-width + 75% width offset secondary + `ml-auto`
+- **Sourcing:** Text/image overlap — 60% image with oversized statement crossing boundary via absolute positioning (desktop); `-mt-10` overlap (mobile); `type-oversized` typography
+- **Sustainability:** Typography-led centered layout — `type-oversized` statement + optional secondary image at 16/9 below; no image-dominant grid
+- **Second marquee:** "SL BY HAMMAH" — `type-oversized`, right direction (opposite first), 35s speed, `bg-[#111110]` dark surface; signals story conclusion
+- **Closing:** Full-bleed `h-[85svh]`, lighter overlay (`bg-[#111116]/40` vs old 60%), split statement (`type-oversized` + `type-statement`), `btn-engraved-primary` CTA
+- **Motion hierarchy:** entrance → stagger reveal → sticky narrative → CSS marquee → immersive reveal → dual-speed parallax → overlap reveal → typography reveal → opposite marquee → campaign reveal
+- **Reduced motion:** All parallax returns `[0,0]`; marquees stop; all reveals render static; page remains intentionally designed without animation
+- **Performance:** CSS transform-only marquees; MotionValues for parallax (no React state); no new dependencies; no timers; all images lazy except hero
+- **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 new errors), `npm run build` ✅ (20 pages)
+- **Our Story Redesign: Complete**
+
+## Our Story Redesign — Mini Sprint 3
+- **Date:** September 8, 2026
+- **Status:** ✅ Complete
+- **Objective:** Replace all placeholder copy on the Our Story page with approved HAMMAH wording; content integrity audit; responsive fit pass
+- **Placeholder removed (Craft):** "This section is reserved for approved information about Hammah's manufacturing, construction and finishing process." → 3 approved paragraphs on proportion, balance, finish
+- **Placeholder removed (Sourcing):** "This section will explain approved sourcing and material information once the brand has finalised the facts it wants to publish." → 3 approved paragraphs on materials, colour, visual character
+- **Placeholder removed (Sustainability):** "Hammah's sustainability position will be published here once sourcing, production and material claims have been formally documented." → 4 approved paragraphs on responsibility, deliberation, transparency
+- **Closing updated:** "Considered essentials." → "This is only the beginning." + expanded body about Hammah defining its language + "Collection 001 opens the story. It does not finish it."
+- **New editorial statement:** "Detail is where the character lives." — scroll-reveal between Craft and Sourcing, `type-headline`, `aria-hidden`
+- **Content audit:** Searched for 10 placeholder patterns — all clean. Two "this section" matches are approved continuation copy in Sourcing
+- **No unsupported claims added:** Verified against prohibited terms (sustainable, eco-friendly, ethical, carbon-neutral, artisan, factory, country of origin, certifications)
+- **Responsive:** Longer copy fits via `max-w-md`/`max-w-lg` constraints + `mt-4` paragraph spacing; no typography size reductions
+- **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 new errors), `npm run build` ✅ (20 pages)
+- **Our Story Redesign: Complete after Mini Sprint 3 content pass**

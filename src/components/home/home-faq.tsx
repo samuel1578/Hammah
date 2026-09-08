@@ -90,11 +90,11 @@ export function HomeFaq() {
 
   return (
     <section
-      className="py-24 md:py-36"
+      className="py-16 md:py-36"
       aria-labelledby="faq-heading"
     >
       <Container>
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-20">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-20">
           {/* Left — editorial title block */}
           <div className="md:col-span-4">
             <Reveal delay={0} y={8}>
@@ -145,7 +145,7 @@ export function HomeFaq() {
                     id={questionId}
                     aria-expanded={isActive}
                     aria-controls={answerId}
-                    className={`flex w-full items-baseline gap-4 py-5 text-left transition-all duration-200 md:py-6 ${
+                    className={`flex w-full items-baseline gap-4 py-4 text-left transition-all duration-200 md:py-6 ${
                       isActive
                         ? "text-foreground"
                         : "text-muted-foreground hover:text-foreground"

@@ -20,9 +20,9 @@ export function HomeLegacy() {
   const media = getMediaById("home-legacy");
 
   return (
-    <section className="py-24 md:py-36 bg-surface" aria-labelledby="legacy-heading">
+    <section className="py-16 md:py-36 bg-surface" aria-labelledby="legacy-heading">
       <Container>
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16 md:items-center">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-16 md:items-center">
           {/* Copy */}
           <div className="order-2 md:order-1">
             <TextReveal
@@ -41,7 +41,7 @@ export function HomeLegacy() {
               </p>
             </Reveal>
 
-            <Stagger className="mt-8 space-y-3" staggerDelay={0.06}>
+            <Stagger className="mt-6 md:mt-8 space-y-3" staggerDelay={0.06}>
               {benefits.map((b) => (
                 <motion.div
                   key={b}
@@ -55,7 +55,7 @@ export function HomeLegacy() {
             </Stagger>
 
             <Reveal delay={0.4} y={12}>
-              <div className="mt-8">
+              <div className="mt-6 md:mt-8">
                 <Link
                   href="/legacy"
                   className="type-cta inline-flex h-12 items-center rounded-md btn-engraved-primary px-7"

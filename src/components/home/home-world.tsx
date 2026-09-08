@@ -33,10 +33,10 @@ const worldCategories = [
 
 export function HomeHammahWorld() {
   return (
-    <section className="py-24 md:py-36 bg-surface" aria-labelledby="hammah-world-heading">
+    <section className="py-16 md:py-36 bg-surface" aria-labelledby="hammah-world-heading">
       <Container>
         {/* Header */}
-        <div className="mb-12 md:mb-20">
+        <div className="mb-8 md:mb-20">
           <TextReveal
             as="h2"
             id="hammah-world-heading"

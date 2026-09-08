@@ -15,9 +15,9 @@ export function HomeFeaturedPieces() {
   const featuredMedia = getMediaBySection("featured-pieces");
 
   return (
-    <section className="py-24 md:py-36 bg-surface" aria-labelledby="featured-heading">
+    <section className="py-16 md:py-36 bg-surface" aria-labelledby="featured-heading">
       <Container>
-        <div className="mb-12 md:mb-16">
+        <div className="mb-8 md:mb-16">
           <TextReveal
             as="h2"
             id="featured-heading"
@@ -44,7 +44,7 @@ export function HomeFeaturedPieces() {
         </Stagger>
 
         <Reveal delay={0.2} y={12}>
-          <div className="mt-10">
+          <div className="mt-8 md:mt-10">
             <Link
               href="/shop"
               className="type-cta inline-flex h-12 items-center rounded-md btn-engraved-secondary px-7 group"

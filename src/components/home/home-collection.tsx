@@ -15,10 +15,10 @@ export function HomeCollection001() {
   const media = getMediaBySection("collection-001");
 
   return (
-    <section className="py-24 md:py-36" aria-labelledby="collection-001-heading">
+    <section className="py-16 md:py-36" aria-labelledby="collection-001-heading">
       <Container>
         {/* Header — stronger hierarchy */}
-        <div className="mb-14 md:mb-20">
+        <div className="mb-10 md:mb-20">
           <Reveal delay={0} y={8}>
             <p className="type-eyebrow mb-4 text-muted-foreground">Collection 001</p>
           </Reveal>
@@ -105,7 +105,7 @@ export function HomeCollection001() {
 
         {/* CTA — stronger */}
         <Reveal delay={0.3} y={14}>
-          <div className="mt-12">
+          <div className="mt-8 md:mt-12">
             <Link
               href="/collections/collection-001"
               className="type-cta inline-flex h-12 items-center rounded-md btn-engraved-primary px-7"
