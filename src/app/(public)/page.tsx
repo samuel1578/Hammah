@@ -10,6 +10,8 @@ import { HomePointOfView } from "@/components/home/home-pov";
 import { HomeLegacy } from "@/components/home/home-legacy";
 import { HomeFaq } from "@/components/home/home-faq";
 import { HomeClosing } from "@/components/home/home-closing";
+import { PublicCTA } from "@/components/ui/public-cta";
+import { Container } from "@/components/ui/container";
 
 function toLegacyProducts(items: CatalogueProduct[]): Product[] {
   return items.map((p) => ({
@@ -36,10 +38,16 @@ export default async function HomePage() {
       <HomeHammahWorld />
       <HomeDetailCraft />
       <HomeFeaturedPieces products={toLegacyProducts(featuredProducts)} />
+      <Container className="py-8 text-center">
+        <PublicCTA slot="home_midpage" />
+      </Container>
       <HomePointOfView />
       <HomeLegacy />
       <HomeFaq />
       <HomeClosing />
+      <Container className="py-8 text-center">
+        <PublicCTA slot="home_closing" />
+      </Container>
     </>
   );
 }

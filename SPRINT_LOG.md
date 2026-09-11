@@ -722,3 +722,210 @@ Deterministic SQL seed file (`supabase/seed.sql`) generated from existing fixtur
 - `01_HAMMAH_SYSTEM_CONTEXT.md` — Route map, data architecture, variant info, caching notes
 - `03_HAMMAH_DATA_MODEL.md` — `ProductVariant` replaces `PRODUCT_SIZES`/`SizeOption`
 - `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint 0.16 closeout verified
+
+---
+
+## Sprint 0.17 — Admin Dashboard + Catalogue/Media/Merchandising
+
+**Date:** September 11, 2026
+**Status:** ✅ Complete (corrective pass applied)
+
+### Objective
+Build HAMMAH's first production Admin experience for managing catalogue, media, and merchandising without editing source code.
+
+### Key Deliverables
+
+#### Admin Authentication
+- Middleware (`src/middleware.ts`) protects all `/admin` routes
+- Cookie-based Supabase auth + profiles.role = 'admin' check
+- `/admin/login` — HAMMAH-branded login page
+- Non-admin users redirected to `/`
+
+#### Admin Shell
+- Persistent sidebar on desktop, drawer on mobile
+- HAMMAH branding, theme switcher, logout
+- 7 navigation sections: Dashboard, Products, Categories, Collections, Media, Homepage, CTAs
+
+#### Dashboard
+- Real database counts: products (published/draft/archived), collections, media assets, featured products, CTAs
+
+#### Product Management
+- List with search/filter by status
+- Create product (name, slug, description, category, pricing, availability)
+- Edit product (all fields + status transitions: draft → published → archived)
+- Assign collections (multi-select)
+- Manage variants (add/edit/delete per-product sizes)
+- Media assignment (primary, hover, gallery, detail roles)
+- Archive (soft delete)
+
+#### Category Management
+- List all categories with product counts
+- Edit category (name, slug, description, cover image, sort order, status)
+- Archive (only if zero products)
+
+#### Collection Management
+- List all collections with product counts
+- Create collection (name, slug, editorial content, status)
+- Edit collection with tabs: Details, Products, Media
+- Product assignment with reorder
+- Collection 002 can be prepared without code changes ✅
+
+#### Media Library
+- Grid view with thumbnails, type badges, search, filter
+- Upload to Cloudflare R2 via server endpoint
+- File validation (type, size)
+- Edit alt text, caption
+- Reference checking before delete
+- Safe deletion (blocked if referenced)
+
+#### R2 Upload
+- Server-side upload via `/api/admin/media/upload`
+- Object key: `uploads/{uuid}-{sanitized-filename}`
+- MIME/size validation
+- Creates media_assets record in Supabase
+- R2 credentials remain server-only
+
+#### Homepage Merchandising
+- Featured products: add/remove/reorder
+- Collection feature: select collection, edit heading/statement
+
+#### CTA Manager
+- New table: `cta_placements` (migration 00002)
+- Predefined slots: home_midpage, home_closing, shop_banner, shop_footer, collection_hero, collection_footer
+- Admin can: create, edit, enable/disable, delete CTAs
+- Public integration: `PublicCTA` component renders active CTAs in predefined slots
+- CTA enabled → rendered. CTA disabled → absent (no empty gaps).
+
+### Database Changes
+- New migration: `00002_cta_placements.sql`
+- New table: `cta_placements` with RLS policies
+- No changes to existing tables
+
+### Routes Created
+- 16 admin pages
+- 15 API routes
+- Total: 48 routes (17 public + 16 admin + 15 API)
+
+### Validation
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 48 pages |
+| Public routes | ✅ All still work |
+| Admin routes | ✅ All render |
+
+### Files Created
+- src/middleware.ts
+- src/app/admin/layout.tsx
+- src/app/admin/page.tsx
+- src/app/admin/login/page.tsx
+- src/app/admin/products/page.tsx
+- src/app/admin/products/new/page.tsx
+- src/app/admin/products/[id]/page.tsx
+- src/app/admin/categories/page.tsx
+- src/app/admin/categories/[id]/page.tsx
+- src/app/admin/collections/page.tsx
+- src/app/admin/collections/new/page.tsx
+- src/app/admin/collections/[id]/page.tsx
+- src/app/admin/media/page.tsx
+- src/app/admin/homepage/page.tsx
+- src/app/admin/ctas/page.tsx
+- src/app/admin/ctas/new/page.tsx
+- src/app/admin/ctas/[id]/page.tsx
+- src/components/admin/admin-shell.tsx
+- src/components/admin/media-upload.tsx
+- src/components/ui/public-cta.tsx
+- src/app/api/admin/products/route.ts
+- src/app/api/admin/products/[id]/route.ts
+- src/app/api/admin/products/[id]/variants/route.ts
+- src/app/api/admin/products/[id]/variants/[variantId]/route.ts
+- src/app/api/admin/products/[id]/media/route.ts
+- src/app/api/admin/categories/route.ts
+- src/app/api/admin/categories/[id]/route.ts
+- src/app/api/admin/collections/route.ts
+- src/app/api/admin/collections/[id]/route.ts
+- src/app/api/admin/collections/[id]/products/route.ts
+- src/app/api/admin/media/upload/route.ts
+- src/app/api/admin/media/[id]/route.ts
+- src/app/api/admin/media/[id]/references/route.ts
+- src/app/api/admin/homepage/featured/route.ts
+- src/app/api/admin/homepage/collection-feature/route.ts
+- src/app/api/admin/ctas/route.ts
+- src/app/api/admin/ctas/[id]/route.ts
+- src/lib/catalogue/ctas.ts
+- supabase/migrations/00002_cta_placements.sql
+
+### Canonical Docs Updated
+- 01_HAMMAH_SYSTEM_CONTEXT.md
+- 02_HAMMAH_ARCHITECTURE.md
+- 03_HAMMAH_DATA_MODEL.md
+- 04_HAMMAH_PRODUCT_AND_ADMIN_RULES.md
+- 07_HAMMAH_DEVELOPMENT_ROADMAP.md
+
+---
+
+## Sprint 0.17 Corrective Pass — September 11, 2026
+
+**Status:** ✅ Complete
+
+### Issue A: Admin Dashboard Shows Zero Records
+
+**Root cause:** Two problems combined:
+
+1. **Seed not applied to remote.** `npx supabase db push` applies migrations but does NOT run `supabase/seed.sql`. The remote database had the schema but no data.
+
+2. **Dashboard query bugs in `src/app/admin/page.tsx`:**
+   - `getCount(supabase, "media")` — wrong table name. Should be `"media_assets"`.
+   - `getCount(supabase, "products", { featured: true })` — wrong query. No `featured` column on `products`. Should query `homepage_featured_products` with `{ is_active: true }`.
+   - `getCount(supabase, "ctas", { active: true })` — wrong table and column. Should be `"cta_placements"` with `{ enabled: true }`.
+
+**Fixes applied:**
+- Fixed all three dashboard queries to use correct table/column names
+- Product status queries (`"published"`, `"draft"`, `"archived"`) were already correct
+
+**Seed audit:** `supabase/seed.sql` is idempotent (all INSERTs use `ON CONFLICT DO NOTHING`). Safe to run against existing data. Does not modify auth.users, does not overwrite admin profiles.
+
+**Command to populate remote:** Run the seed SQL via Supabase Dashboard SQL Editor (not `supabase db push`).
+
+### Issue B: Admin Theme Hydration Mismatch
+
+**Root cause:** `theme` from `useTheme()` is `undefined` during SSR but `"system"` on client. Theme buttons used `theme === t` for active class, causing server/client class mismatch.
+
+**Fix applied:** Added `mounted` state via `useSyncExternalStore` (same pattern as `theme-menu.tsx`). Active class only applied when `mounted && theme === t`. Server and first client render now structurally match.
+
+### Profile Creation Trigger
+
+**Finding:** No automatic `auth.users → public.profiles` trigger exists. The canonical docs reference this as the intended architecture, but it was never implemented.
+
+**Recommendation:** Defer to Sprint 0.19 (Hamatee Auth). The trigger is small and safe but has unresolved requirements around profile fields (first_name, last_name are NOT NULL but not collected during simple signup). Adding it now would require either making those fields nullable or collecting them during signup — both are Sprint 0.19 decisions.
+
+### Validation
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 48 pages |
+| Admin queries | ✅ Fixed |
+| Hydration | ✅ Fixed |
+| R2 upload | ✅ Fixed |
+
+---
+
+## Sprint 0.17 Corrective Pass — R2 Upload Failure — September 11, 2026
+
+**Status:** ✅ Fixed
+
+### Root Cause
+
+`CLOUDFLARE_ACCOUNT_ID` in `.env.local` contained a full URL instead of the raw account ID. The endpoint template `https://${accountId}.r2.cloudflarestorage.com` produced a malformed URL. The AWS SDK parsed the hostname as just `https`, and virtual-hosted-style addressing prepended the bucket → `hammah-media.https`. DNS lookup failed.
+
+### Secondary Bug
+
+Upload route manually constructed public URL as `https://${bucket}.${accountId}.r2.dev/${storageKey}` — wrong in two ways: didn't use configured `CLOUDFLARE_R2_PUBLIC_BASE_URL`, and used raw `accountId`.
+
+### Fixes Applied
+- `src/lib/cloudflare/r2.ts`: Added `sanitizeAccountId()` to strip protocol/domain from raw env var. Added safe diagnostics.
+- `src/app/api/admin/media/upload/route.ts`: Replaced manual publicUrl with `getMediaUrl(storageKey)`.
+
+### Env Var Fix Required
+
+`CLOUDFLARE_ACCOUNT_ID` must be the raw account ID (no protocol, no domain). Not a secret key — safe to identify format.

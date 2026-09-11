@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document.
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16 closeout)
+> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
 
 ---
 
@@ -113,53 +113,30 @@
 
 ---
 
-## Sprint 0.17 — Hamatee Auth & Account
+## Sprint 0.17 — Admin Dashboard & CTA System
 
-**Status:** 🔲 Not started
+**Status:** ✅ Complete
 
-**Goal:** Real authentication with persistent user accounts, saved pieces, and addresses.
+**Goal:** Admin dashboard for managing all business content, plus CTA system with predefined frontend placement slots.
 
-### Dependencies
-- Sprint 0.16 complete (catalogue reads from Supabase)
-- Supabase Auth configured
-
-### Major Deliverables
-- Real email/password signup via Supabase Auth
-- Real login/logout
-- Session handling (middleware, cookies)
-- Profile creation on signup (database trigger)
-- Google OAuth (if desired)
-- Authenticated account area (`/account`)
-- Account sections: Overview, Orders, Saved Pieces, Profile, Addresses
-- Saved pieces: real database persistence
-- Addresses: CRUD for delivery addresses
-- Legacy/account IA clarification
-- Account icon behaviour in header (logged in → /account, logged out → /login)
-
-### Out of Scope
-- Order implementation
-- Admin UI
-- Media upload UI
-
-### Exit Criteria
-- `npm run build` succeeds
-- Real signup creates user in Supabase
-- Real login establishes session
-- Protected routes redirect to login when unauthenticated
-- Saved pieces persist in database
-- Addresses persist in database
-- Account page renders real user data
+### Closeout Summary (September 11, 2026)
+- Admin dashboard with role-based access control
+- Admin routes: `/admin`, `/admin/login`, `/admin/products`, `/admin/categories`, `/admin/collections`, `/admin/media`, `/admin/homepage`, `/admin/ctas`
+- Product, category, collection, media, homepage, and CTA CRUD operations
+- CTA system with 6 predefined frontend slots
+- Two Supabase clients: service-role for mutations, cookie-based for auth checks
+- Middleware auth flow for admin route protection
 
 ---
 
-## Sprint 0.18 — Orders & Customer Commerce
+## Sprint 0.18 — Orders + WhatsApp Handoff
 
 **Status:** 🔲 Not started
 
 **Goal:** Real order submission and persistence with immutable historical records.
 
 ### Dependencies
-- Sprint 0.17 complete (auth and accounts working)
+- Sprint 0.17 complete (admin dashboard working)
 - Product catalogue reading from Supabase
 
 ### Major Deliverables
@@ -189,34 +166,32 @@
 
 ---
 
-## Sprint 0.19 — Admin Operations
+## Sprint 0.19 — Hamatee Authentication + Account
 
 **Status:** 🔲 Not started
 
-**Goal:** Full Admin dashboard for managing all business content.
+**Goal:** Real authentication with persistent user accounts, saved pieces, and addresses.
 
 ### Dependencies
 - Sprint 0.18 complete (orders working)
 - Auth with admin role working
 
 ### Major Deliverables
-- Protected Admin area (role check middleware)
-- Admin dashboard
-- Product CRUD (create, edit, publish, unpublish, archive)
-- Category CRUD (create, edit, reorder)
-- Collection CRUD (create, edit, publish, add/remove/reorder products)
-- Media Library (upload, manage, select)
-- Image upload to Cloudflare R2
-- Video upload to Cloudflare R2
-- 360° set upload and management
-- Homepage merchandising editors (featured products, hero images, collection feature)
-- Order management (status updates, admin notes)
-- Customer list view
+- Real email/password signup via Supabase Auth
+- Real login/logout
+- Session handling (middleware, cookies)
+- Profile creation on signup (database trigger)
+- Google OAuth (if desired)
+- Authenticated account area (`/account`)
+- Account sections: Overview, Orders, Saved Pieces, Profile, Addresses
+- Saved pieces: real database persistence
+- Addresses: CRUD for delivery addresses
+- Legacy/account IA clarification
+- Account icon behaviour in header (logged in → /account, logged out → /login)
 
 ### Out of Scope
-- Page builder (not building one)
-- CSS/design management
-- Content management beyond listed scope
+- Admin UI (complete)
+- Media upload UI
 
 ### Exit Criteria
 - `npm run build` succeeds
@@ -231,14 +206,14 @@
 
 ---
 
-## Sprint 0.20 — Managed Content Cutover & Production Hardening
+## Sprint 0.20 — Production Hardening / Cutover
 
 **Status:** 🔲 Not started
 
 **Goal:** Production-ready application with all hardcoded data removed, dynamic data verified, and performance/accessibility/SEO standards met.
 
 ### Dependencies
-- Sprint 0.19 complete (Admin working)
+- Sprint 0.19 complete (auth and accounts working)
 - All data managed via Admin
 
 ### Major Deliverables
@@ -279,10 +254,10 @@
 ## Sprint Sequence Summary
 
 ```
-0.14 (Complete) ──▶ 0.15 (Foundation) ──▶ 0.16 (Catalogue) ──▶ 0.17 (Auth)
-                                                               │
-                                                               ▼
-                                       0.20 (Cutover) ◀── 0.19 (Admin) ◀── 0.18 (Orders)
+0.14 (Complete) ──▶ 0.15 (Complete) ──▶ 0.16 (Complete) ──▶ 0.17 (Complete)
+                                                                │
+                                                                ▼
+                                        0.20 (Hardening) ◀── 0.19 (Auth) ◀── 0.18 (Orders)
 ```
 
 ---

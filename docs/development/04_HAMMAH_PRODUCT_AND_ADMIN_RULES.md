@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document.
 >
-> **Last verified against repo:** September 11, 2026
+> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
 
 ---
 
@@ -222,6 +222,37 @@ pending → contacted → confirmed → preparing → ready → shipped → deli
 4. **Guest support.** `user_id` is nullable — guests can submit orders.
 5. **Order number format:** `HAM-YYYY-NNNN` (e.g., HAM-2026-0001), auto-incrementing.
 6. **Currency:** GHS (Ghanaian Cedi) default.
+
+---
+
+## 8. CTA System
+
+### What Admin Controls
+
+- **Enabled/disabled** — CTA rendered in its slot or absent (no empty gaps)
+- **Label** — Display text for the CTA button
+- **Destination (href)** — Where the CTA links to
+- **Visual variant** — primary, secondary, or ghost
+- **Optional scheduling** — starts_at / ends_at for time-limited CTAs
+
+### Predefined Frontend Slots
+
+| Slot | Location |
+|------|----------|
+| `home_midpage` | Homepage mid-section |
+| `home_closing` | Homepage closing section |
+| `shop_banner` | Shop page banner |
+| `shop_footer` | Shop page footer |
+| `collection_hero` | Collection page hero |
+| `collection_footer` | Collection page footer |
+
+### Rules
+
+1. **CTA enabled = rendered in its slot.** CTA disabled = absent (no empty gaps).
+2. **Frontend controls:** exact location, layout, spacing, typography, animation.
+3. **Admin controls:** content and visibility only.
+4. **CTAs are content, not page builder.** Admin manages what the CTA says and where it goes; code determines how it looks.
+5. **Scheduling is optional.** If both starts_at and ends_at are null, CTA is always active (when enabled).
 
 ---
 

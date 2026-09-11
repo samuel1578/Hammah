@@ -3,6 +3,8 @@ import { getPublishedCollectionBySlug, getCollectionProducts } from "@/lib/catal
 import type { CatalogueProduct } from "@/lib/catalogue";
 import type { Product } from "@/types/products";
 import { CollectionSlugClient } from "./collection-slug-client";
+import { PublicCTA } from "@/components/ui/public-cta";
+import { Container } from "@/components/ui/container";
 
 interface CollectionPageProps {
   params: Promise<{ slug: string }>;
@@ -46,9 +48,17 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   }
 
   return (
-    <CollectionSlugClient
-      collection={{ id: collection.id, slug: collection.slug, name: collection.name, description: collection.description }}
-      products={toLegacyProducts(products)}
-    />
+    <>
+      <Container className="py-4 text-center">
+        <PublicCTA slot="collection_hero" />
+      </Container>
+      <CollectionSlugClient
+        collection={{ id: collection.id, slug: collection.slug, name: collection.name, description: collection.description }}
+        products={toLegacyProducts(products)}
+      />
+      <Container className="py-8 text-center">
+        <PublicCTA slot="collection_footer" />
+      </Container>
+    </>
   );
 }

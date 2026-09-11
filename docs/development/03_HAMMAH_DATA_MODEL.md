@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document, cross-referenced with `02_HAMMAH_ARCHITECTURE.md`.
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16 closeout)
+> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
 
 ---
 
@@ -301,6 +301,25 @@ Category.route     → Collection slug (semantic collision)
 **Purpose:** Controls which collection is featured on homepage with editorial copy.
 **RLS:** Public read where `is_active`. Admin full CRUD.
 
+### Table: `cta_placements`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
+| `slot` | text | NOT NULL | — | Predefined frontend placement slot |
+| `label` | text | NOT NULL | — | Display text for CTA |
+| `href` | text | NOT NULL | — | Destination URL or path |
+| `enabled` | boolean | NOT NULL | `true` | Whether CTA renders in slot |
+| `variant` | text | NOT NULL | `'primary'` | CHECK IN ('primary', 'secondary', 'ghost') |
+| `sort_order` | integer | NOT NULL | `0` | Display order within slot |
+| `starts_at` | timestamptz | NULLABLE | — | Optional scheduling start |
+| `ends_at` | timestamptz | NULLABLE | — | Optional scheduling end |
+| `created_at` | timestamptz | NOT NULL | `now()` | |
+| `updated_at` | timestamptz | NOT NULL | `now()` | |
+
+**Purpose:** Admin-managed CTA placements in predefined frontend positions.
+**RLS:** Public read active (enabled, non-expired). Admin full CRUD.
+
 ### Indexes (Foundation)
 
 ```sql
@@ -339,7 +358,7 @@ CREATE INDEX idx_hhi_active ON homepage_hero_images(is_active, sort_order);
 
 These tables are approved but NOT part of Sprint 0.15. They will be introduced closer to their implementation sprint.
 
-### Table: `saved_products` (Sprint 0.17)
+### Table: `saved_products` (Sprint 0.19)
 
 | Column | Type | Nullable | Default | Notes |
 |--------|------|----------|---------|-------|
@@ -351,7 +370,7 @@ These tables are approved but NOT part of Sprint 0.15. They will be introduced c
 
 **Purpose:** Persistent saved pieces per user.
 
-### Table: `addresses` (Sprint 0.17)
+### Table: `addresses` (Sprint 0.19)
 
 | Column | Type | Nullable | Default | Notes |
 |--------|------|----------|---------|-------|

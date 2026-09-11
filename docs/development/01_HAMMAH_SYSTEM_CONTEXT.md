@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document, cross-referenced with `02_HAMMAH_ARCHITECTURE.md` and `03_HAMMAH_DATA_MODEL.md`.
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16 closeout)
+> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
 
 ---
 
@@ -97,8 +97,23 @@ src/
 | `/privacy` | Static | Privacy policy | Hardcoded legal | Static |
 | `/terms` | Static | Terms & conditions | Hardcoded legal | Static |
 | `/dev/media` | Static | Dev-only 160-image contact sheet | `pixieset-collection-001.ts` | Static |
+| `/admin` | Dynamic | Admin dashboard | Supabase (cookie + admin client) | Request-time dynamic |
+| `/admin/login` | Static | Admin login | Supabase Auth | Static |
+| `/admin/products` | Static | Product list | Supabase | Static |
+| `/admin/products/[id]` | Dynamic | Product edit | Supabase | Dynamic |
+| `/admin/products/new` | Static | Create product | Supabase | Static |
+| `/admin/categories` | Static | Category list | Supabase | Static |
+| `/admin/categories/[id]` | Dynamic | Category edit | Supabase | Dynamic |
+| `/admin/collections` | Static | Collection list | Supabase | Static |
+| `/admin/collections/[id]` | Dynamic | Collection edit | Supabase | Dynamic |
+| `/admin/collections/new` | Static | Create collection | Supabase | Static |
+| `/admin/media` | Static | Media Library | Supabase | Static |
+| `/admin/homepage` | Static | Homepage merchandising | Supabase | Static |
+| `/admin/ctas` | Static | CTA Manager | Supabase | Static |
+| `/admin/ctas/[id]` | Dynamic | CTA edit | Supabase | Dynamic |
+| `/admin/ctas/new` | Static | Create CTA | Supabase | Static |
 
-**Total:** 17 routes (16 public + `/dev/media`)
+**Total:** 32 routes (16 public + 15 admin + `/dev/media`)
 
 **Caching note:** All 5 Supabase-backed routes are request-time dynamic because the cookie-based Supabase server client (`src/lib/supabase/server.ts`) calls `cookies()`, which opts the route into dynamic rendering. No `export const revalidate`, `export const dynamic`, or `use cache` is used.
 
@@ -121,6 +136,7 @@ Catalogue data (products, categories, collections, media, variants) is read from
 | `getPublishedCategories()` | All published categories |
 | `getProductsByCategorySlug(slug)` | Products by category |
 | `getHomepageFeaturedProducts()` | Featured products for homepage |
+| `getActiveCtaPlacements()` | Active CTAs for frontend slots |
 
 ### Fixture Files (Editorial/Dev — Still in Use)
 
@@ -157,6 +173,9 @@ Catalogue data (products, categories, collections, media, variants) is read from
 - Auth pages (login, signup) with full UI
 - Legal pages (delivery, returns, size guide, privacy, terms)
 - Dev media contact sheet (`/dev/media`) with search, copy, fullscreen preview
+- Admin dashboard with role-based access
+- Admin product, category, collection, media, homepage, and CTA management
+- CTA system with predefined frontend placement slots
 - Light/dark theme via `next-themes`
 - Motion animations throughout (scroll reveals, page transitions, stagger effects)
 - Responsive design across all breakpoints
@@ -192,7 +211,6 @@ Catalogue data (products, categories, collections, media, variants) is read from
 - No real authentication or session management (fully mocked)
 - No product video playback (placeholder tab only)
 - No 360° viewer (placeholder tab only)
-- No admin interface
 - No data persistence for orders, saved pieces, or addresses
 - No API routes
 - No `/shop/[category]` dynamic route (deferred — category filtering is client-side on `/shop`)

@@ -2,6 +2,8 @@ import { getPublishedProducts, getPublishedCategories } from "@/lib/catalogue";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import type { Product } from "@/types/products";
 import { ShopClient } from "./shop-client";
+import { PublicCTA } from "@/components/ui/public-cta";
+import { Container } from "@/components/ui/container";
 
 function toLegacyProducts(items: CatalogueProduct[]): Product[] {
   return items.map((p) => ({
@@ -24,5 +26,15 @@ export default async function ShopPage() {
     getPublishedCategories(),
   ]);
 
-  return <ShopClient products={toLegacyProducts(products)} categories={categories} />;
+  return (
+    <>
+      <Container className="py-4 text-center">
+        <PublicCTA slot="shop_banner" />
+      </Container>
+      <ShopClient products={toLegacyProducts(products)} categories={categories} />
+      <Container className="py-8 text-center">
+        <PublicCTA slot="shop_footer" />
+      </Container>
+    </>
+  );
 }

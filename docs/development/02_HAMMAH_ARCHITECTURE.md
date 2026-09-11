@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document, cross-referenced with `03_HAMMAH_DATA_MODEL.md` and `05_HAMMAH_MEDIA_ARCHITECTURE.md`.
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16)
+> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
 
 ---
 
@@ -102,6 +102,12 @@ Components requiring interactivity:
 - `POST /api/media/upload` — generate signed upload URL
 - `GET/PUT/DELETE /api/admin/*` — admin CRUD operations
 - `POST /api/auth/*` — auth callbacks
+- `GET/POST/PUT/DELETE /api/admin/products` — product CRUD
+- `GET/POST/PUT/DELETE /api/admin/categories` — category CRUD
+- `GET/POST/PUT/DELETE /api/admin/collections` — collection CRUD
+- `GET/POST/PUT/DELETE /api/admin/media` — media management
+- `GET/POST/PUT/DELETE /api/admin/ctas` — CTA management
+- `GET/PUT /api/admin/homepage` — homepage merchandising
 
 ---
 
@@ -142,9 +148,13 @@ Components requiring interactivity:
 **Pattern:**
 1. Admin UI sends mutation to API route
 2. API route validates input, checks admin role
-3. API route executes Supabase mutation with service role
+3. API route executes Supabase mutation with service-role client
 4. Response returned to UI
 5. UI revalidates cached data
+
+**Two Supabase clients:**
+- **Service-role client** — used for admin mutations (bypasses RLS, server-side only)
+- **Cookie-based client** — used for auth checks and reading (respects RLS, session from cookie)
 
 ---
 
@@ -162,12 +172,25 @@ Components requiring interactivity:
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Request     │────▶│  Middleware   │────▶│  Route       │
+│  (any page)  │     │  (Edge)      │     │  Handler     │
+│              │     │              │     │              │
+│  Cookie →    │     │  Validate    │     │  Admin?      │
+│  Supabase    │     │  session     │     │  → admin check│
+│  session     │     │  Check role  │     │  Public?     │
+│              │     │  Redirect    │     │  → proceed   │
+└──────────────┘     └──────────────┘     └──────────────┘
+```
+
 **Key rules:**
 - Supabase client SDK handles auth on client side
 - Session stored in HTTP-only cookie (Supabase default)
 - Middleware validates session on protected routes
 - Profile created via database trigger on signup
 - Admin role checked in RLS policies and middleware
+- `/admin/*` routes require admin role; unauthenticated users redirect to `/admin/login`
 
 ---
 
