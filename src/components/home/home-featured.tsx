@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { getMediaBySection } from "@/data/media-manifest";
-import { getProductsByCollection } from "@/data/products";
+import type { Product } from "@/types/products";
 import { Reveal } from "@/components/motion/reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { ProductCard } from "@/components/product/product-card";
@@ -10,10 +9,11 @@ import { Stagger, staggerItemVariants } from "@/components/motion/stagger";
 import { motion } from "motion/react";
 import { Container } from "@/components/ui/container";
 
-export function HomeFeaturedPieces() {
-  const products = getProductsByCollection("collection-001").slice(0, 4);
-  const featuredMedia = getMediaBySection("featured-pieces");
+interface HomeFeaturedPiecesProps {
+  products: Product[];
+}
 
+export function HomeFeaturedPieces({ products }: HomeFeaturedPiecesProps) {
   return (
     <section className="py-16 md:py-36 bg-surface" aria-labelledby="featured-heading">
       <Container>
@@ -33,14 +33,11 @@ export function HomeFeaturedPieces() {
         </div>
 
         <Stagger className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6" staggerDelay={0.08}>
-          {products.map((product, i) => {
-            const media = featuredMedia[i];
-            return (
-              <motion.div key={product.id} variants={staggerItemVariants}>
-                <ProductCard product={product} media={media} index={i} />
-              </motion.div>
-            );
-          })}
+          {products.map((product, i) => (
+            <motion.div key={product.id} variants={staggerItemVariants}>
+              <ProductCard product={product} index={i} />
+            </motion.div>
+          ))}
         </Stagger>
 
         <Reveal delay={0.2} y={12}>

@@ -14,9 +14,10 @@ import { Container } from "@/components/ui/container";
 
 interface PdpClientProps {
   product: Product;
+  relatedProducts?: Product[];
 }
 
-export function PdpClient({ product }: PdpClientProps) {
+export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
   const [mediaMode, setMediaMode] = useState<MediaMode>("photos");
   const [orderOpen, setOrderOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function PdpClient({ product }: PdpClientProps) {
       </section>
 
       {/* Related pieces */}
-      <RelatedPieces currentSlug={product.slug} />
+      <RelatedPieces products={relatedProducts} />
 
       {/* Sticky mobile CTA */}
       <StickyMobileCTA

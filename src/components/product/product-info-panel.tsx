@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Heart, Ruler, Truck } from "lucide-react";
 import type { Product } from "@/types/products";
-import { PRODUCT_SIZES, type SizeOption } from "@/types/products";
 import { ProductPrice } from "@/components/product/product-price";
 import { AvailabilityLabel } from "@/components/product/availability-label";
 import { Reveal } from "@/components/motion/reveal";
@@ -67,7 +66,7 @@ export function ProductInfoPanel({
               Select size
             </label>
             <div className="flex gap-2">
-              {PRODUCT_SIZES.map((size: SizeOption) => (
+              {product.variants.map((size) => (
                 <button
                   key={size.value}
                   type="button"

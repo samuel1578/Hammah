@@ -23,6 +23,7 @@ export interface Product {
   availability: Availability;
   description: string;
   media: ProductMedia;
+  variants: ProductVariant[];
 }
 
 /* ── Collection Types ── */
@@ -52,17 +53,10 @@ export interface Category {
   sortOrder?: number;
 }
 
-/* ── PDP Size Options ── */
+/* ── Variant Types ── */
 
-export interface SizeOption {
+export interface ProductVariant {
   label: string;
   value: string;
   available: boolean;
 }
-
-export const PRODUCT_SIZES: SizeOption[] = [
-  { label: "30", value: "30", available: true },
-  { label: "32", value: "32", available: true },
-  { label: "34", value: "34", available: true },
-  { label: "36", value: "36", available: true },
-];

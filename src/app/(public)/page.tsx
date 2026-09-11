@@ -1,3 +1,6 @@
+import { getHomepageFeaturedProducts } from "@/lib/catalogue";
+import type { CatalogueProduct } from "@/lib/catalogue";
+import type { Product } from "@/types/products";
 import { HomeEditorialHero } from "@/components/home/home-editorial-hero";
 import { HomeCollection001 } from "@/components/home/home-collection";
 import { HomeHammahWorld } from "@/components/home/home-world";
@@ -8,14 +11,31 @@ import { HomeLegacy } from "@/components/home/home-legacy";
 import { HomeFaq } from "@/components/home/home-faq";
 import { HomeClosing } from "@/components/home/home-closing";
 
-export default function HomePage() {
+function toLegacyProducts(items: CatalogueProduct[]): Product[] {
+  return items.map((p) => ({
+    id: p.slug,
+    slug: p.slug,
+    name: p.name,
+    collection: "collection-001",
+    category: p.category.slug,
+    pricingMode: p.pricingMode,
+    availability: p.availability,
+    description: p.description,
+    media: p.media,
+    variants: p.variants,
+  }));
+}
+
+export default async function HomePage() {
+  const featuredProducts = await getHomepageFeaturedProducts();
+
   return (
     <>
       <HomeEditorialHero />
       <HomeCollection001 />
       <HomeHammahWorld />
       <HomeDetailCraft />
-      <HomeFeaturedPieces />
+      <HomeFeaturedPieces products={toLegacyProducts(featuredProducts)} />
       <HomePointOfView />
       <HomeLegacy />
       <HomeFaq />

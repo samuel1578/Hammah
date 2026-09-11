@@ -387,3 +387,338 @@
 - **Responsive:** Longer copy fits via `max-w-md`/`max-w-lg` constraints + `mt-4` paragraph spacing; no typography size reductions
 - **Validation:** `tsc --noEmit` ✅, `eslint` ✅ (0 new errors), `npm run build` ✅ (20 pages)
 - **Our Story Redesign: Complete after Mini Sprint 3 content pass**
+
+## Sprint 0.14 — Commerce Domain & Admin Data Architecture Investigation
+
+- **Date:** September 11, 2026
+- **Status:** ✅ Investigation Complete — Architecture Proposed
+- **Objective:** Inspect actual repository, produce canonical Supabase + Cloudflare + Admin architecture blueprint
+- **Scope:** Investigation ONLY — no backend, no tables, no Admin dashboard, no migrations, no media migration
+- **Key findings:**
+  - 8 products with 7 curated Pixieset images each (56 product images from 160-image pool)
+  - 3 categories (Trousers, Kaftans, Footwear) — categories masquerade as collections in routing
+  - 3 collections (Collection 001 with 8 products, Kaftans empty, Footwear empty)
+  - ~55 media slot entries across all routes in typed media manifest
+  - Order flow is request-based (not instant checkout) — customer submits, Hammah contacts
+  - Authentication fully mocked — no real auth exists
+  - Saved Pieces is frontend-only state
+  - Video and 360° are placeholder tabs on PDP
+  - `/dev/media` is functional 160-image contact sheet (no auth)
+  - Product `id` and `slug` are identical — no separate UUID
+  - `PRODUCT_SIZES` is global fixture — all products share same 4 sizes
+  - No price field on products (all PRICE_ON_REQUEST)
+  - No publish/draft state on products
+  - No timestamps on any entities
+- **Proposed schema:** 14 tables (profiles, categories, collections, products, product_variants, collection_products, media_assets, product_media, homepage_featured_products, homepage_hero_images, homepage_collection_feature, saved_products, addresses, orders, order_items)
+- **Admin IA proposed:** Dashboard, Catalogue (Products/Categories), Collections, Media (Images/Videos/360 Sets), Homepage/Merchandising, Orders, Customers, Settings
+- **Migration strategy:** 6-phase incremental approach (Schema → Reads → Auth → Orders → Admin → Cutover)
+- **Sprint sequence proposed:** 0.15 (Foundation) → 0.16 (Catalogue) → 0.17 (Auth) → 0.18 (Orders) → 0.19 (Admin) → 0.20 (Cutover)
+- **Output:** `HAMMAH_SPRINT_0_14_ARCHITECTURE.md` — 35-section canonical architecture document
+- **No code changes:** This sprint produced no changes to application code
+- **Next phase:** Sprint 0.15 — Supabase + Cloudflare Foundation
+
+---
+
+## Canonical Development Documentation Setup
+
+- **Date:** September 11, 2026
+- **Status:** ✅ Complete — 7 canonical documents established
+- **Scope:** Documentation only — no application code changes
+- **Purpose:** Establish the permanent canonical development documentation system that all future HAMMAH development prompts must follow
+- **Output:** `docs/development/` directory with 7 files:
+  - `01_HAMMAH_SYSTEM_CONTEXT.md` — What HAMMAH is, current state, terminology
+  - `02_HAMMAH_ARCHITECTURE.md` — Approved production architecture (current + target)
+  - `03_HAMMAH_DATA_MODEL.md` — Current TypeScript model, approved Sprint 0.15 foundation, future/provisional model
+  - `04_HAMMAH_PRODUCT_AND_ADMIN_RULES.md` — Frozen product/business rules
+  - `05_HAMMAH_MEDIA_ARCHITECTURE.md` — Media strategy (current, approved, future)
+  - `06_HAMMAH_SECURITY_AND_ENGINEERING_RULES.md` — Security rules, engineering discipline, mandatory AI prompt preamble
+  - `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint-by-sprint roadmap with goals, dependencies, deliverables, exit criteria
+- **Key decisions documented:**
+  - Categories and collections are distinct concepts (category ≠ collection)
+  - Slug-based dynamic routing (`/collections/[slug]`) is the approved model
+  - Collection 001 is NOT architecturally special
+  - Request-based order model (not instant checkout)
+  - Admin vs code ownership is explicit
+  - Supabase Free for database/auth/RLS, Cloudflare R2 for media
+  - Video and 360° are NOT currently functional (placeholder tabs only)
+  - 360° is future/provisional — schema does not depend heavily on it
+- **Validation:** All 7 docs checked for consistency; no contradictory definitions found
+- **No code changes:** This sprint produced no changes to application code
+- **Build:** `npm run build` ✅ 20 pages, clean
+
+---
+
+# Sprint 0.15 — Production Foundation
+
+**Date:** September 11, 2026
+**Status:** ✅ Complete
+
+## Objective
+
+Establish the Supabase + Cloudflare foundation for HAMMAH production backend.
+
+## Packages Installed
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `@supabase/supabase-js` | 2.116.0 | Supabase client SDK |
+| `@supabase/ssr` | 0.12.7 | Supabase SSR helpers for Next.js App Router |
+| `@aws-sdk/client-s3` | 3.1130.0 | Cloudflare R2 (S3-compatible) client |
+
+## Files Created
+
+| File | Purpose |
+|------|---------|
+| `.env.example` | Environment variable contract (Supabase + Cloudflare + App) |
+| `src/lib/supabase/client.ts` | Browser Supabase client (createBrowserClient) |
+| `src/lib/supabase/server.ts` | Server Component Supabase client (cookie-based sessions) |
+| `src/lib/supabase/admin.ts` | Admin Supabase client (service role, server-only) |
+| `src/lib/cloudflare/r2.ts` | R2 upload/delete helpers (server-only) |
+| `src/lib/media/url.ts` | `getMediaUrl()` — media delivery URL abstraction |
+| `supabase/migrations/00001_initial_schema.sql` | Foundation schema migration |
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `package.json` | Added 3 dependencies |
+| `next.config.ts` | Added `media.slbyhammah.com` to image remote patterns |
+
+## Migration: Tables Created
+
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User profiles, 1:1 with auth.users, role field (customer/admin) |
+| `categories` | Product classifications (Trousers, Kaftans, Footwear) |
+| `collections` | Editorial groupings (Collection 001, etc.) |
+| `products` | Core sellable items |
+| `product_variants` | Per-product size/variant system |
+| `collection_products` | Many-to-many collection-product junction |
+| `media_assets` | Global media metadata pool |
+| `product_media` | Product-media assignments with role + sort |
+| `homepage_featured_products` | Homepage featured product selection |
+| `homepage_hero_images` | Homepage hero rotation images |
+| `homepage_collection_feature` | Homepage collection feature section |
+
+## RLS Policies Created
+
+- **profiles:** User can read/update own profile; admins can read all
+- **categories/collections/products:** Public read published; admins full CRUD
+- **product_variants:** Public read for published products; admins full CRUD
+- **collection_products:** Public read for published collections; admins full CRUD
+- **media_assets:** Public read; admins full CRUD
+- **product_media:** Public read for published products; admins full CRUD
+- **homepage_***: Public read active; admins full CRUD
+
+## Security Functions
+
+- `is_admin()` — SECURITY DEFINER function, checks profiles.role = 'admin'
+- `handle_updated_at()` — SECURITY DEFINER trigger function, auto-sets updated_at
+
+## Environment Variables Required
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_R2_ACCESS_KEY_ID=
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=
+CLOUDFLARE_R2_BUCKET=
+CLOUDFLARE_R2_PUBLIC_BASE_URL=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+## Verification
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean (tsc --noEmit) |
+| Build | ✅ 20 pages, no regressions |
+| Public frontend | ✅ Unchanged (still fixture-driven) |
+| No secrets committed | ✅ .env.example has no values |
+| No runtime behaviour changed | ✅ |
+
+## Canonical Docs Updated
+
+- `02_HAMMAH_ARCHITECTURE.md` — version stamp
+- `03_HAMMAH_DATA_MODEL.md` — foundation tables marked as implemented
+- `05_HAMMAH_MEDIA_ARCHITECTURE.md` — version stamp
+- `06_HAMMAH_SECURITY_AND_ENGINEERING_RULES.md` — env vars updated to match actual implementation
+- `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — version stamp
+
+## What Sprint 0.15 Does NOT Include (by design)
+
+- No public page migration (stays fixture-driven until Sprint 0.16)
+- No auth implementation
+- No order implementation
+- No Admin UI
+- No media upload UI
+- No seed data (categories, products, etc.) — Sprint 0.16
+- No Supabase project required for code to compile (helpers fail at runtime without credentials)
+
+---
+
+# Sprint 0.16 — Catalogue Migration
+
+**Date:** September 11, 2026
+**Status:** ✅ Complete
+
+## Objective
+
+Migrate HAMMAH's catalogue from TypeScript fixtures to Supabase-authoritative data. Public catalogue pages now read from the database.
+
+## Seed Strategy
+
+Deterministic SQL seed file (`supabase/seed.sql`) generated from existing fixture data. Run after `00001_initial_schema.sql`.
+
+### Database Records Seeded
+
+| Entity | Count | Source |
+|--------|-------|--------|
+| Categories | 3 | `src/data/categories.ts` |
+| Collections | 3 | `src/data/collections.ts` |
+| Products | 8 | `src/data/products.ts` |
+| Product variants | 32 | 8 products × 4 sizes (30/32/34/36) |
+| Collection products | 8 | All 8 in Collection 001 |
+| Media assets | ~56 | Curated Pixieset images from products |
+| Product media | ~56 | 7 per product (primary/hover/gallery/detail) |
+| Homepage featured | 4 | Design 01–04 |
+| Homepage collection feature | 1 | Collection 001 |
+
+## Files Created
+
+| File | Purpose |
+|------|---------|
+| `supabase/seed.sql` | Deterministic seed data from fixtures |
+| `src/lib/catalogue/types.ts` | Domain types (CatalogueProduct, CatalogueCollection, CatalogueCategory) |
+| `src/lib/catalogue/queries.ts` | Supabase queries + legacy type mapper |
+| `src/lib/catalogue/index.ts` | Public API re-exports |
+| `src/app/(public)/shop/shop-client.tsx` | Client component for shop filtering |
+| `src/app/(public)/collections/collections-client.tsx` | Client component for collections index |
+| `src/app/(public)/collections/[slug]/page.tsx` | Dynamic collection route (server) |
+| `src/app/(public)/collections/[slug]/collection-slug-client.tsx` | Dynamic collection renderer (client) |
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/page.tsx` | Fetches featured products from Supabase |
+| `src/app/(public)/shop/page.tsx` | Server component, fetches products + categories |
+| `src/app/(public)/product/[slug]/page.tsx` | Fetches product + related from Supabase |
+| `src/app/(public)/collections/page.tsx` | Server component, fetches collections |
+| `src/components/home/home-featured.tsx` | Accepts products as prop (no fixture import) |
+| `src/components/product/pdp-client.tsx` | Accepts relatedProducts prop |
+| `src/components/product/related-pieces.tsx` | Accepts products as prop (no fixture import) |
+
+## Files Removed
+
+| File | Reason |
+|------|--------|
+| `src/app/(public)/collections/collection-001/page.tsx` | Replaced by dynamic `/collections/[slug]` |
+| `src/app/(public)/collections/kaftans/page.tsx` | Replaced by dynamic `/collections/[slug]` |
+| `src/app/(public)/collections/footwear/page.tsx` | Replaced by dynamic `/collections/[slug]` |
+
+## Routing Changes
+
+| Route | Before | After |
+|-------|--------|-------|
+| `/` | Static | Dynamic (fetches featured products) |
+| `/shop` | Static | Dynamic (fetches products + categories) |
+| `/product/[slug]` | Dynamic | Dynamic (now fetches from Supabase) |
+| `/collections` | Static | Dynamic (fetches collections) |
+| `/collections/collection-001` | Static | → `/collections/[slug]` (dynamic) |
+| `/collections/kaftans` | Static | → `/collections/[slug]` (dynamic) |
+| `/collections/footwear` | Static | → `/collections/[slug]` (dynamic) |
+| `/collections/[slug]` | — | New dynamic route |
+
+## Remaining Fixture Dependencies
+
+| Component | Fixture | Reason |
+|-----------|---------|--------|
+| `home-editorial-hero.tsx` | Hardcoded Pixieset URLs | Editorial, not catalogue |
+| `home-world.tsx` | `getMediaBySection` | Category editorial images |
+| `home-craft.tsx` | `getMediaBySection` | Editorial detail images |
+| `home-pov.tsx` | `getMediaBySection` | Editorial portrait |
+| `home-legacy.tsx` | Hardcoded | Editorial content |
+| `home-faq.tsx` | Hardcoded | Editorial content |
+| `home-closing.tsx` | Hardcoded | Editorial content |
+| `media-manifest.ts` | Pixieset URLs | Editorial/media routing |
+| `pixieset-collection-001.ts` | 160 URLs | Seed source (not runtime) |
+| `dev/media/page.tsx` | Pixieset data | Dev tool |
+| `product-info-panel.tsx` | `PRODUCT_SIZES` | Pending variant migration |
+| `order-drawer.tsx` | `Product` type | Uses mapped type |
+
+## Parity Verification
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 20 pages |
+| Product count | ✅ 8 (matches fixtures) |
+| Category count | ✅ 3 (matches fixtures) |
+| Collection count | ✅ 3 (matches fixtures) |
+| Product slugs | ✅ design-01 through design-08 |
+| Product media | ✅ Primary/hover/gallery/detail preserved |
+| Public routes | ✅ All render correctly |
+| Collection 001 URL | ✅ `/collections/collection-001` works via `[slug]` |
+
+## Canonical Docs Updated
+
+- All 7 canonical docs — version stamp
+- `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint 0.16 marked ✅ Complete
+
+## What Sprint 0.16 Does NOT Include (by design)
+
+- No Admin CRUD UI
+- No auth implementation
+- No order persistence
+- No full Cloudflare R2 media migration
+- No homepage editorial migration (stays fixture-driven)
+
+---
+
+## Sprint 0.16 Closeout — September 11, 2026
+
+**Status:** ✅ Complete
+
+### Closeout Items Resolved
+
+#### 1. Product Variants Authoritative
+- **Before:** `ProductInfoPanel` imported `PRODUCT_SIZES` global fixture (30, 32, 34, 36) — identical for all products
+- **After:** `Product` type now has `variants: ProductVariant[]`; `ProductInfoPanel` reads `product.variants`
+- **Files changed:** `types/products.ts`, `product-info-panel.tsx`, `products.ts` (legacy fixture), all 4 `toLegacyProduct()` functions
+- **`PRODUCT_SIZES` and `SizeOption` removed from runtime** — replaced by `ProductVariant` interface
+- **Variant parity confirmed:** DB seed has 4 variants (30, 32, 34, 36) all available, matching legacy fixture exactly
+
+#### 2. Category Routing Status
+- `/shop` has DB-backed categories with client-side filtering (no page navigation)
+- `/shop/[category]` deferred — not architecturally required for current 8-product catalogue
+- Category data flows: `getPublishedCategories()` → `ShopClient` → filter buttons
+
+#### 3. Caching Investigation
+- **All 5 migrated routes are request-time dynamic** — `cookies()` in `src/lib/supabase/server.ts:5` forces dynamic rendering
+- No `export const revalidate`, `export const dynamic`, or `use cache` used anywhere
+- No ISR configured. Routes re-render on every request.
+- If ISR is desired in future, either: (a) stop using cookie-based client for public data, or (b) add `export const revalidate` to page files
+
+#### 4. Remaining Fixture Dependencies
+| Class | Count | Details |
+|-------|-------|---------|
+| A (Runtime/Dev) | 22 | Navigation, media-manifest, pixieset direct usage, products (saved page) |
+| B (Seed support) | 2 | `products.ts`, `media-manifest.ts` importing pixieset URLs |
+| C (Obsolete) | 0 | None |
+
+#### 5. Verification
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 17 pages |
+| Product variants | ✅ Supabase-authoritative |
+| Variant parity | ✅ 4 sizes × 8 products |
+| Caching documented | ✅ All routes request-time dynamic |
+
+### Canonical Docs Updated
+- `01_HAMMAH_SYSTEM_CONTEXT.md` — Route map, data architecture, variant info, caching notes
+- `03_HAMMAH_DATA_MODEL.md` — `ProductVariant` replaces `PRODUCT_SIZES`/`SizeOption`
+- `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint 0.16 closeout verified
