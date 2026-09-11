@@ -1186,3 +1186,28 @@ WhatsApp prefilled message now includes:
 | Build | ✅ 49 pages |
 
 ### Sprint 0.18.2 Status: HUMAN VERIFIED / COMPLETE
+
+---
+
+## Sprint 0.18.2 — Order Form Required/Optional Field Polish
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Changes
+
+Order form now clearly distinguishes required vs optional fields with native `required` attributes and `— optional` label suffixes. "* Required" note added above form.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/product/order-drawer.tsx` | Added `required` to 4 required inputs; added `— optional` to 5 optional labels; added "* Required" note |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: HUMAN VERIFIED / COMPLETE

@@ -371,6 +371,9 @@ export function OrderDrawer({
                   )}
 
                   {/* Form fields */}
+                  <p className="mb-4 text-xs text-muted-foreground" aria-hidden="true">
+                    * Required
+                  </p>
                   <div className="space-y-4">
                     <div>
                       <label
@@ -382,6 +385,7 @@ export function OrderDrawer({
                       <input
                         id="order-name"
                         type="text"
+                        required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent"
@@ -398,6 +402,7 @@ export function OrderDrawer({
                       <input
                         id="order-phone"
                         type="tel"
+                        required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent"
@@ -433,6 +438,7 @@ export function OrderDrawer({
                       <input
                         id="order-region"
                         type="text"
+                        required
                         value={region}
                         onChange={(e) => setRegion(e.target.value)}
                         className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent"
@@ -449,6 +455,7 @@ export function OrderDrawer({
                       <input
                         id="order-city"
                         type="text"
+                        required
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent"
@@ -459,7 +466,10 @@ export function OrderDrawer({
                         htmlFor="order-area"
                         className="mb-1 block text-sm font-medium text-foreground"
                       >
-                        Area
+                        Area{" "}
+                        <span className="text-muted-foreground font-normal">
+                          — optional
+                        </span>
                       </label>
                       <input
                         id="order-area"
@@ -474,7 +484,10 @@ export function OrderDrawer({
                         htmlFor="order-landmark"
                         className="mb-1 block text-sm font-medium text-foreground"
                       >
-                        Landmark
+                        Landmark{" "}
+                        <span className="text-muted-foreground font-normal">
+                          — optional
+                        </span>
                       </label>
                       <input
                         id="order-landmark"
@@ -489,7 +502,10 @@ export function OrderDrawer({
                         htmlFor="order-gps"
                         className="mb-1 block text-sm font-medium text-foreground"
                       >
-                        GhanaPost GPS / Digital Address
+                        GhanaPost GPS / Digital Address{" "}
+                        <span className="text-muted-foreground font-normal">
+                          — optional
+                        </span>
                       </label>
                       <input
                         id="order-gps"
@@ -504,7 +520,10 @@ export function OrderDrawer({
                         htmlFor="order-notes"
                         className="mb-1 block text-sm font-medium text-foreground"
                       >
-                        Delivery Notes
+                        Delivery Notes{" "}
+                        <span className="text-muted-foreground font-normal">
+                          — optional
+                        </span>
                       </label>
                       <textarea
                         id="order-notes"
