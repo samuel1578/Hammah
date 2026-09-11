@@ -10,6 +10,7 @@ interface ProductPageProps {
 
 function toLegacyProduct(p: CatalogueProduct): Product {
   return {
+    dbId: p.dbId,
     id: p.slug,
     slug: p.slug,
     name: p.name,

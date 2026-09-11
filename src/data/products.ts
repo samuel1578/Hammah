@@ -16,7 +16,7 @@ const DEFAULT_VARIANTS = [
 
 export const products: Product[] = [
   {
-    id: "design-01", slug: "design-01", name: "Design 01",
+    dbId: "design-01", id: "design-01", slug: "design-01", name: "Design 01",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -24,7 +24,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-02", slug: "design-02", name: "Design 02",
+    dbId: "design-02", id: "design-02", slug: "design-02", name: "Design 02",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -32,7 +32,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-03", slug: "design-03", name: "Design 03",
+    dbId: "design-03", id: "design-03", slug: "design-03", name: "Design 03",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -40,7 +40,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-04", slug: "design-04", name: "Design 04",
+    dbId: "design-04", id: "design-04", slug: "design-04", name: "Design 04",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -48,7 +48,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-05", slug: "design-05", name: "Design 05",
+    dbId: "design-05", id: "design-05", slug: "design-05", name: "Design 05",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -56,7 +56,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-06", slug: "design-06", name: "Design 06",
+    dbId: "design-06", id: "design-06", slug: "design-06", name: "Design 06",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -64,7 +64,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-07", slug: "design-07", name: "Design 07",
+    dbId: "design-07", id: "design-07", slug: "design-07", name: "Design 07",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,
@@ -72,7 +72,7 @@ export const products: Product[] = [
     variants: DEFAULT_VARIANTS,
   },
   {
-    id: "design-08", slug: "design-08", name: "Design 08",
+    dbId: "design-08", id: "design-08", slug: "design-08", name: "Design 08",
     collection: "collection-001", category: "trousers",
     pricingMode: "PRICE_ON_REQUEST", availability: "AVAILABLE",
     description: TEMP_DESCRIPTION,

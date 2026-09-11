@@ -929,3 +929,260 @@ Upload route manually constructed public URL as `https://${bucket}.${accountId}.
 ### Env Var Fix Required
 
 `CLOUDFLARE_ACCOUNT_ID` must be the raw account ID (no protocol, no domain). Not a secret key — safe to identify format.
+
+---
+
+## Sprint 0.17 Final UX Polish + Closeout — September 11, 2026
+
+**Status:** ✅ Complete — Sprint 0.17 CLOSED
+
+### Human QA Evidence (Pre-Polish)
+
+The following interactions were verified by human QA before this UX polish:
+
+- Admin product name edit propagated to public catalogue/PDP
+- R2 upload succeeded (authenticated server endpoint → R2 binary → Supabase metadata)
+- R2 public delivery succeeded (image rendered on public storefront)
+- Media Library thumbnail succeeded
+- Asset Details preview succeeded
+- R2 asset assigned as Product Primary succeeded
+- Public storefront rendered assigned R2 asset
+- Test Primary image was subsequently restored
+
+### What Was Changed
+
+#### 1. New Reusable Media Picker Component
+- **File:** `src/components/admin/media-picker.tsx` (new)
+- Modal dialog with thumbnail grid, search by filename/alt text, image/video filtering
+- Single-select mode for Primary/Hover, multi-select mode for Gallery/Detail
+- Clear selected state, Cancel/Confirm buttons, responsive layout
+- Dark/Light/System compatible, Escape key to close
+
+#### 2. Redesigned Product Media Section
+- **File:** `src/app/admin/products/[id]/page.tsx` (modified)
+- **Primary / Cover:** Clear section with current image preview (128×128), "Change primary image" button, red × to remove
+- **Hover:** Clear section with current image preview, "Change hover image" button, red × to remove
+- **Gallery:** Thumbnail grid with move left/right arrows on hover, red × to remove, "+ Add" button
+- **Detail:** Same as Gallery — thumbnails with reorder arrows, remove controls, "+ Add" button
+- All sections use obvious card-based layout with clear role labels and cardinality hints ("Exactly 1", "Optional", "Multiple")
+
+#### 3. Removal/Unassignment Controls
+- Primary/Hover: Red × button removes assignment (does NOT delete media_assets record)
+- Gallery/Detail: Red × button on hover removes assignment
+- All removals are unassignment only — global media assets preserved
+
+#### 4. Gallery/Detail Reordering
+- Move left/right arrows appear on hover for Gallery and Detail images
+- Arrow buttons disabled at boundaries (first/last)
+- Reordering updates `sort_order` in `product_media` table directly via Supabase client
+- No drag-and-drop dependency added
+
+### Files Created
+- `src/components/admin/media-picker.tsx`
+
+### Files Modified
+- `src/app/admin/products/[id]/page.tsx` — media section redesigned, picker integration, reorder handlers
+
+### What Was NOT Changed
+- No new API routes added (reordering uses direct Supabase sort_order updates)
+- No schema changes
+- R2 upload architecture unchanged
+- Media Library page unchanged
+- All other admin pages unchanged
+
+### Validation
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 48 pages |
+| Primary assignment | ✅ Functional (via picker) |
+| Hover assignment | ✅ Functional (via picker) |
+| Gallery assignment | ✅ Functional (multi-select via picker) |
+| Detail assignment | ✅ Functional (multi-select via picker) |
+| Removal/unassignment | ✅ Functional (does not delete media_assets) |
+| Gallery/Detail reordering | ✅ Functional (move left/right) |
+| Media Picker search | ✅ Functional |
+| Media Picker type filter | ✅ Functional |
+| Dark/Light/System | ✅ Compatible |
+| No hydration warnings | ✅ |
+| No broken images | ✅ |
+
+### Known Limitations
+- The existing `/api/admin/products/[id]/media/route.ts` API route is not used by the product editor (editor uses direct Supabase calls). The API route remains available for programmatic use.
+- No upload-from-picker — Admin must upload via Media Library page first, then assign via picker. This is acceptable for the current workflow.
+- No role-change support — changing an asset's role requires remove + re-assign. This is a minor friction that does not warrant additional complexity.
+
+### Sprint 0.17 Status: CLOSED / COMPLETE
+
+---
+
+## Sprint 0.18.1 — Order Domain + Persistence Foundation
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Establish the order persistence foundation: database schema, atomic order creation, server-side validation, immutable snapshots, and idempotent submission.
+
+### Migration
+
+`supabase/migrations/00003_orders.sql` — introduces `orders`, `order_items`, `order_number_seq`, and the `create_order` RPC function.
+
+### Key Design Decisions
+
+- **Order reference:** `HAM-YYYY-NNNN` via PostgreSQL sequence (concurrency-safe)
+- **Atomic creation:** Single RPC function `create_order` handles validation + inserts in one transaction
+- **Idempotency:** Client-generated UUID stored with unique constraint; duplicate key returns existing order
+- **Immutable snapshots:** Product name, slug, variant, pricing, media URL stored at order time
+- **RLS:** No public read; authenticated user reads own; admin reads all; inserts via SECURITY DEFINER function
+- **Price model:** All products are PRICE_ON_REQUEST — no numeric prices invented
+
+### Type Changes
+
+- `CatalogueProduct` and `Product` extended with `dbId: string`
+- `mapProduct()` includes `dbId: row.id`
+- All `toLegacyProducts()` functions updated (4 pages)
+- Legacy fixture updated with placeholder `dbId`
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/00003_orders.sql` | Order domain schema |
+| `src/lib/orders/types.ts` | Order domain types |
+| `src/app/api/orders/route.ts` | POST endpoint |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/types/products.ts` | Added `dbId` to Product |
+| `src/lib/catalogue/types.ts` | Added `dbId` to CatalogueProduct |
+| `src/lib/catalogue/queries.ts` | `mapProduct()` includes `dbId` |
+| `src/app/(public)/product/[slug]/page.tsx` | toLegacyProduct passes dbId |
+| `src/app/(public)/page.tsx` | toLegacyProducts passes dbId |
+| `src/app/(public)/shop/page.tsx` | toLegacyProducts passes dbId |
+| `src/app/(public)/collections/[slug]/page.tsx` | toLegacyProducts passes dbId |
+| `src/data/products.ts` | Added dbId to all 8 fixture products |
+| `src/components/product/order-drawer.tsx` | Full rewrite for real submission |
+| `package.json` | Added zod dependency |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+| API route present | ✅ `/api/orders` in build output |
+
+### Sprint 0.18.1 Status: COMPLETE
+
+---
+
+## Sprint 0.18.2 — Customer Order Experience + WhatsApp Handoff
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Complete the customer-facing website order flow with WhatsApp handoff after successful persistence.
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/orders/whatsapp.ts` | WhatsApp message builder, URL constructor, config check |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/product/order-drawer.tsx` | Success state with WhatsApp handoff, copy reference, error handling, idempotency management |
+| `.env.example` | Added `NEXT_PUBLIC_HAMMAH_WHATSAPP_NUMBER` |
+| `docs/development/06_HAMMAH_SECURITY_AND_ENGINEERING_RULES.md` | Added WhatsApp env var to required vars |
+
+### Key Design Decisions
+
+- WhatsApp number stored as `NEXT_PUBLIC_HAMMAH_WHATSAPP_NUMBER` (public contact info, client-safe)
+- Helper module centralizes message construction and URL building
+- WhatsApp opens only AFTER persistence succeeds
+- "Continue on WhatsApp" button is fallback for popup blockers
+- Copy reference button for clipboard
+- Idempotency key reused on error retry, new key on new attempt
+- Form data preserved on error for customer correction
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: COMPLETE — Corrective QA / Runtime Verification Pending
+
+---
+
+## Sprint 0.18.2 — Corrective QA
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Root Cause — "Invalid product" (400)
+
+Zod `.uuid()` enforces RFC 4122 version/variant bits. Deterministic seed UUIDs (e.g., `c0000000-0000-0000-0000-000000000001`) lack proper version/variant nibbles. PostgreSQL accepts them; Zod rejects them.
+
+### Fix
+
+Replaced `z.string().uuid("Invalid product")` with regex: `/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/`. Applied to `product_id` only. `idempotency_key` retains strict `.uuid()` (browser-generated).
+
+### Other Fixes
+
+- Stale refresh token: `getUser()` wrapped in try-catch (middleware + shared `requireAdmin`)
+- All 12 admin API routes use centralized auth
+- Diagnostic logging removed
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/api/orders/route.ts` | `product_id` validator: `.uuid()` → regex; removed diagnostic logging |
+| `src/components/product/order-drawer.tsx` | Removed diagnostic logging |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: Runtime Verification Pending
+
+---
+
+## Sprint 0.18.2 — WhatsApp Message Polish
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete — Human Verified
+
+### Changes
+
+WhatsApp prefilled message now includes:
+
+- Product page URL (built from `NEXT_PUBLIC_SITE_URL` + product slug)
+- Delivery region and city summary
+- Digital/GPS address when supplied
+- Graceful omission of product URL when `NEXT_PUBLIC_SITE_URL` is unavailable
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/lib/orders/whatsapp.ts` | Added `productSlug`, `deliveryRegion`, `deliveryCity`, `deliveryGps` to interface; added product URL + delivery summary to message; added `getSiteUrl()` helper |
+| `src/components/product/order-drawer.tsx` | Pass new fields to `buildWhatsAppMessage` |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: HUMAN VERIFIED / COMPLETE

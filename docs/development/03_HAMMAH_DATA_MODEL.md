@@ -389,14 +389,16 @@ These tables are approved but NOT part of Sprint 0.15. They will be introduced c
 
 **Purpose:** Customer delivery addresses.
 
-### Table: `orders` (Sprint 0.18)
+### Table: `orders` (Sprint 0.18.1)
 
 | Column | Type | Nullable | Default | Notes |
 |--------|------|----------|---------|-------|
 | `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
 | `order_number` | text | NOT NULL | — | UNIQUE, human-readable (HAM-YYYY-NNNN) |
 | `user_id` | uuid | NULLABLE | — | FK → auth.users(id), NULL for guests |
-| `status` | text | NOT NULL | `'pending'` | CHECK IN ('pending', 'contacted', 'confirmed', 'preparing', 'ready', 'shipped', 'delivered', 'cancelled') |
+| `source` | text | NOT NULL | `'website_guest'` | CHECK IN ('website_guest', 'hamatee') |
+| `communication_channel` | text | NOT NULL | `'whatsapp'` | |
+| `status` | text | NOT NULL | `'pending'` | CHECK IN ('pending', 'contacted', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled') |
 | `customer_name` | text | NOT NULL | — | |
 | `customer_phone` | text | NOT NULL | — | |
 | `customer_email` | text | NULLABLE | — | |
@@ -406,32 +408,41 @@ These tables are approved but NOT part of Sprint 0.15. They will be introduced c
 | `delivery_landmark` | text | NULLABLE | — | |
 | `delivery_gps` | text | NULLABLE | — | |
 | `delivery_notes` | text | NULLABLE | — | |
+| `customer_note` | text | NULLABLE | — | |
 | `admin_notes` | text | NULLABLE | — | |
-| `subtotal_snapshot` | integer | NULLABLE | — | In pence/pesewas |
-| `total_snapshot` | integer | NULLABLE | — | In pence/pesewas |
-| `currency` | text | NOT NULL | `'GHS'` | |
+| `idempotency_key` | text | NULLABLE | — | UNIQUE — prevents duplicate submissions |
 | `created_at` | timestamptz | NOT NULL | `now()` | |
 | `updated_at` | timestamptz | NOT NULL | `now()` | |
-| `contacted_at` | timestamptz | NULLABLE | — | When Hammah last contacted |
 
 **Purpose:** Request-based order records. Status tracks the operational flow.
 
-### Table: `order_items` (Sprint 0.18)
+### Table: `order_items` (Sprint 0.18.1)
 
 | Column | Type | Nullable | Default | Notes |
 |--------|------|----------|---------|-------|
 | `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
 | `order_id` | uuid | NOT NULL | — | FK → orders(id), ON DELETE CASCADE |
-| `product_id` | uuid | NULLABLE | — | FK → products(id), for reference only |
+| `product_id` | uuid | NULLABLE | — | FK → products(id), ON DELETE SET NULL — for reference only |
 | `product_name_snapshot` | text | NOT NULL | — | Immutable at order time |
 | `product_slug_snapshot` | text | NOT NULL | — | Immutable at order time |
-| `size` | text | NULLABLE | — | |
+| `variant_label` | text | NULLABLE | — | Immutable at order time (e.g., "32") |
+| `variant_value` | text | NULLABLE | — | Immutable at order time (e.g., "32") |
 | `quantity` | integer | NOT NULL | `1` | CHECK > 0 |
-| `price_snapshot` | integer | NULLABLE | — | Immutable at order time |
-| `media_url_snapshot` | text | NULLABLE | — | Immutable at order time |
+| `pricing_mode_snapshot` | text | NOT NULL | — | PRICE_ON_REQUEST or FIXED |
+| `price_amount_snapshot` | integer | NULLABLE | — | In pence/pesewas, nullable for PRICE_ON_REQUEST |
+| `currency` | text | NOT NULL | `'GHS'` | |
+| `media_url_snapshot` | text | NULLABLE | — | Immutable at order time — primary image URL |
 | `created_at` | timestamptz | NOT NULL | `now()` | |
 
 **Purpose:** Individual items within an order. Snapshots mutable product data for historical accuracy.
+
+### Sequence: `order_number_seq`
+
+Used by the `create_order` RPC function to generate unique order numbers in the format `HAM-YYYY-NNNN`.
+
+### Function: `create_order` (RPC)
+
+Atomic function that validates product/variant, generates order number, creates order + order items in a single transaction. Used by `POST /api/orders`.
 
 ### Provisional: 360° Media
 

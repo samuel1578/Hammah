@@ -25,9 +25,15 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Stale/invalid refresh token — treat as signed-out.
+    // The cookie will be cleared by Supabase's cookie handler.
+    user = null;
+  }
 
   // Admin route protection
   if (request.nextUrl.pathname.startsWith("/admin")) {

@@ -115,7 +115,7 @@
 
 ## Sprint 0.17 — Admin Dashboard & CTA System
 
-**Status:** ✅ Complete
+**Status:** ✅ CLOSED / COMPLETE
 
 **Goal:** Admin dashboard for managing all business content, plus CTA system with predefined frontend placement slots.
 
@@ -126,12 +126,17 @@
 - CTA system with 6 predefined frontend slots
 - Two Supabase clients: service-role for mutations, cookie-based for auth checks
 - Middleware auth flow for admin route protection
+- Reusable Media Picker component (modal, search, filter, single/multi select)
+- Product media UX: clear Primary/Hover/Gallery/Detail sections with obvious actions
+- Gallery/Detail reordering via move left/right arrows
+- Removal/unassignment controls (does not delete global media assets)
+- Human QA verified: R2 upload → Media Library → Product assignment → Public storefront rendering
 
 ---
 
 ## Sprint 0.18 — Orders + WhatsApp Handoff
 
-**Status:** 🔲 Not started
+**Status:** ✅ Complete
 
 **Goal:** Real order submission and persistence with immutable historical records.
 

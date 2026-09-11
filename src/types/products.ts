@@ -14,6 +14,7 @@ export interface ProductMedia {
 }
 
 export interface Product {
+  dbId: string;
   id: string;
   slug: string;
   name: string;

@@ -1,27 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/require-admin";
 import { uploadObject } from "@/lib/cloudflare/r2";
 import { getMediaUrl } from "@/lib/media/url";
-
-async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  }
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!profile || profile.role !== "admin") {
-    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
-  }
-  return { admin: createAdminClient(), userId: user.id };
-}
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -42,7 +22,7 @@ function getMediaType(mimeType: string): "image" | "video" | "360_frame" {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin({ includeUserId: true });
   if ("error" in auth) return auth.error;
   const admin = auth.admin;
   const userId = auth.userId;

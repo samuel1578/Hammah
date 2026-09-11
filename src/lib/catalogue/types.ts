@@ -1,6 +1,7 @@
 import type { PricingMode, Availability } from "@/types/products";
 
 export interface CatalogueProduct {
+  dbId: string;
   id: string;
   slug: string;
   name: string;

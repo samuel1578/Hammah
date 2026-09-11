@@ -15,6 +15,7 @@ import { Container } from "@/components/ui/container";
 
 function toLegacyProducts(items: CatalogueProduct[]): Product[] {
   return items.map((p) => ({
+    dbId: p.dbId,
     id: p.slug,
     slug: p.slug,
     name: p.name,

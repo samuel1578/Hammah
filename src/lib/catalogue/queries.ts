@@ -229,6 +229,7 @@ function mapProduct(row: any): CatalogueProduct {
   const category = Array.isArray(row.category) ? row.category[0] : row.category;
 
   return {
+    dbId: row.id,
     id: row.slug,
     slug: row.slug,
     name: row.name,

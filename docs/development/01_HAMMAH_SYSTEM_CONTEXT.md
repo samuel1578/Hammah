@@ -320,14 +320,18 @@ The order flow is **request-based**, not instant checkout:
 3. Shows order summary: product thumbnail, name, "Collection 001", size, qty, "Price on request"
 4. Customer fills: Name, Phone/WhatsApp, Email (optional), Region, City/Town, Area, Landmark, GhanaPost GPS, Delivery Notes
 5. Customer clicks "Place Order Request"
-6. Success state: "Your order request is in." + "This is currently a frontend demonstration"
-7. **No data is persisted anywhere**
+6. Order persists to Supabase via `POST /api/orders` → `create_order` RPC
+7. Success state displays order reference (`HAM-YYYY-NNNN`)
+8. Customer can "Continue on WhatsApp" (prefilled message with order reference to +233542739539)
+9. Customer can "Copy order reference"
 
 **Business process:**
-1. Customer submits order request
-2. Hammah contacts customer directly (WhatsApp/phone)
-3. They agree on payment, delivery, final pricing
-4. Hammah fulfils the order
+1. Customer submits order request via website
+2. Website persists order to Supabase
+3. Customer continues conversation on WhatsApp with order reference
+4. Hammah contacts customer directly
+5. They agree on payment, delivery, final pricing
+6. Hammah fulfils the order
 
 ---
 

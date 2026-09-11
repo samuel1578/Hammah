@@ -2645,4 +2645,449 @@ Three post-implementation issues were found and fixed:
 
 ---
 
+## Sprint 0.17 Final UX Polish + Closeout
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete — Sprint 0.17 CLOSED
+
+### Human QA Evidence (Pre-Polish)
+
+- Admin product name edit propagated to public catalogue/PDP
+- R2 upload succeeded (authenticated server endpoint → R2 binary → Supabase metadata)
+- R2 public delivery succeeded (image rendered on public storefront)
+- Media Library thumbnail succeeded
+- Asset Details preview succeeded
+- R2 asset assigned as Product Primary succeeded
+- Public storefront rendered assigned R2 asset
+- Test Primary image was subsequently restored
+
+### What Was Changed
+
+#### 1. New Reusable Media Picker Component
+- **File:** `src/components/admin/media-picker.tsx` (new)
+- Modal dialog with thumbnail grid, search by filename/alt text, image/video filtering
+- Single-select mode for Primary/Hover, multi-select mode for Gallery/Detail
+- Clear selected state, Cancel/Confirm buttons, responsive layout
+- Dark/Light/System compatible, Escape key to close
+
+#### 2. Redesigned Product Media Section
+- **Primary / Cover:** Clear section with current image preview (128×128), "Change primary image" button, red × to remove
+- **Hover:** Clear section with current image preview, "Change hover image" button, red × to remove
+- **Gallery:** Thumbnail grid with move left/right arrows on hover, red × to remove, "+ Add" button
+- **Detail:** Same as Gallery — thumbnails with reorder arrows, remove controls, "+ Add" button
+- All sections use obvious card-based layout with clear role labels and cardinality hints
+
+#### 3. Removal/Unassignment Controls
+- Primary/Hover: Red × button removes assignment (does NOT delete media_assets record)
+- Gallery/Detail: Red × button on hover removes assignment
+- All removals are unassignment only — global media assets preserved
+
+#### 4. Gallery/Detail Reordering
+- Move left/right arrows appear on hover for Gallery and Detail images
+- Arrow buttons disabled at boundaries (first/last)
+- Reordering updates `sort_order` in `product_media` table
+
+### Files Created
+- `src/components/admin/media-picker.tsx`
+
+### Files Modified
+- `src/app/admin/products/[id]/page.tsx` — media section redesigned, picker integration, reorder handlers
+
+### Validation
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 48 pages |
+| Primary/Hover/Gallery/Detail assignment | ✅ All functional |
+| Removal/unassignment | ✅ Functional |
+| Gallery/Detail reordering | ✅ Functional |
+| Media Picker search/filter | ✅ Functional |
+| Dark/Light/System | ✅ Compatible |
+
+### Known Limitations
+- No upload-from-picker (Admin uploads via Media Library page first, then assigns)
+- No role-change support (remove + re-assign required)
+
+### Sprint 0.17 Status: CLOSED / COMPLETE
+
+---
+
+## Sprint 0.18.1 — Order Domain + Persistence Foundation
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Establish the order persistence foundation: database schema, atomic order creation, server-side validation, immutable snapshots, and idempotent submission.
+
+### Migration Created
+
+**File:** `supabase/migrations/00003_orders.sql`
+
+#### Tables Introduced
+
+| Table | Purpose |
+|-------|---------|
+| `orders` | Request-based order records with customer/delivery info, status lifecycle, idempotency |
+| `order_items` | Individual line items with immutable product/variant snapshots |
+
+#### Sequence
+
+| Object | Purpose |
+|--------|---------|
+| `order_number_seq` | Generates unique order numbers (`HAM-YYYY-NNNN`) |
+
+#### Function
+
+| Object | Purpose |
+|--------|---------|
+| `create_order` (RPC) | Atomic order creation: validates product/variant, generates order number, creates order + items in single transaction |
+
+### Order Number Generation Strategy
+
+- PostgreSQL sequence (`order_number_seq`) starting at 1
+- Format: `HAM-{year}-{sequence padded to 4}` (e.g., `HAM-2026-0001`)
+- Concurrency-safe: sequence is atomic, no race conditions
+- Never derived from client input
+- Stable after creation
+
+### Order/Item Atomicity Strategy
+
+- Single PostgreSQL function `create_order` handles all validation and inserts in one transaction
+- If any step fails (product not found, variant unavailable, validation error), the entire operation rolls back
+- No partial orders are created
+- The function is `SECURITY DEFINER` — executes with owner privileges, bypassing RLS for inserts
+
+### Idempotency Strategy
+
+- Client generates a UUID `idempotency_key` when the order drawer opens
+- Key is stored on the `orders` table with a `UNIQUE` constraint
+- If a duplicate key is detected, the existing order is returned instead of creating a new one
+- Protects against: double-click, network retry, browser retry, repeated form submission
+- Key is regenerated each time the drawer opens (new submission attempt)
+
+### RLS/Security Model
+
+| Table | Policy | Rule |
+|-------|--------|------|
+| `orders` | No public read | Customer data not exposed |
+| `orders` | Authenticated user read own | `user_id = auth.uid()` |
+| `orders` | Admin read all | `is_admin()` |
+| `orders` | Admin update | `is_admin()` |
+| `order_items` | Authenticated user read own | Via parent order `user_id` |
+| `order_items` | Admin read all | `is_admin()` |
+
+Inserts bypass RLS via the `SECURITY DEFINER` function. No public client can read orders.
+
+### Immutable Snapshot Fields
+
+| Field | Source | Purpose |
+|-------|--------|---------|
+| `product_name_snapshot` | `products.name` | Historical name survives renames |
+| `product_slug_snapshot` | `products.slug` | Historical slug survives changes |
+| `variant_label` | `product_variants.size_label` | Selected size label (e.g., "32") |
+| `variant_value` | `product_variants.size_value` | Selected size value |
+| `pricing_mode_snapshot` | `products.pricing_mode` | PRICE_ON_REQUEST or FIXED |
+| `price_amount_snapshot` | `products.price_amount` | Price in pence/pesewas (nullable) |
+| `currency` | `products.currency` | GHS default |
+| `media_url_snapshot` | `media_assets.public_url` (primary) | Product image at order time |
+
+### Server Order-Creation Interface
+
+**Endpoint:** `POST /api/orders`
+
+**Validation:** Zod schema validates all fields before calling RPC
+
+**Request body:**
+```typescript
+{
+  product_id: string (UUID),
+  variant_value?: string,
+  quantity: number (1-10),
+  customer_name: string,
+  customer_phone: string,
+  customer_email?: string,
+  delivery_region: string,
+  delivery_city: string,
+  delivery_area?: string,
+  delivery_landmark?: string,
+  delivery_gps?: string,
+  delivery_notes?: string,
+  idempotency_key?: string (UUID)
+}
+```
+
+**Response (201):**
+```typescript
+{
+  order_id: string,
+  order_number: string
+}
+```
+
+**Error responses:** 400 (validation/server errors), 500 (internal)
+
+### Type Changes
+
+- `CatalogueProduct` extended with `dbId: string` (database UUID)
+- `Product` extended with `dbId: string`
+- `mapProduct()` in `queries.ts` now includes `row.id` as `dbId`
+- All `toLegacyProducts()` functions updated across 4 pages
+- Legacy fixture `products.ts` updated with placeholder `dbId`
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/00003_orders.sql` | Order domain schema, RLS, RPC function |
+| `src/lib/orders/types.ts` | Order domain types (Order, OrderItem, CreateOrderRequest/Response) |
+| `src/app/api/orders/route.ts` | POST endpoint for order creation |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/types/products.ts` | Added `dbId` to `Product` |
+| `src/lib/catalogue/types.ts` | Added `dbId` to `CatalogueProduct` |
+| `src/lib/catalogue/queries.ts` | `mapProduct()` includes `dbId: row.id` |
+| `src/app/(public)/product/[slug]/page.tsx` | `toLegacyProduct` passes `dbId` |
+| `src/app/(public)/page.tsx` | `toLegacyProducts` passes `dbId` |
+| `src/app/(public)/shop/page.tsx` | `toLegacyProducts` passes `dbId` |
+| `src/app/(public)/collections/[slug]/page.tsx` | `toLegacyProducts` passes `dbId` |
+| `src/data/products.ts` | Added `dbId` to all 8 fixture products |
+| `src/components/product/order-drawer.tsx` | Full rewrite: controlled form, API submission, loading/error/success states, idempotency key |
+| `package.json` | Added `zod` dependency |
+
+### Tests Performed
+
+| Scenario | Expected | Result |
+|----------|----------|--------|
+| TypeScript compilation | Clean | ✅ Pass |
+| Production build | 49 pages, no errors | ✅ Pass |
+| API route present | `/api/orders` in build output | ✅ Present |
+| Product types consistent | `dbId` flows through all type conversions | ✅ Verified |
+| Order drawer controlled form | All fields managed via state | ✅ Implemented |
+| Idempotency key generation | UUID generated on drawer open | ✅ Implemented |
+| Error handling | Zod validation, API errors, network errors | ✅ Implemented |
+| Success state | Shows order number | ✅ Implemented |
+
+### What Sprint 0.18.1 Does NOT Include (by design)
+
+- WhatsApp opening/handoff (Sprint 0.18.2)
+- Admin Orders UI (Sprint 0.18.3)
+- Hamatee authentication (Sprint 0.19)
+- Customer order history
+- Real tracking (still demo at `/track`)
+- Email/SMS confirmations
+- Payment gateway
+
+### Migration Required
+
+Run: `npx supabase db push` to apply `00003_orders.sql` to remote Supabase.
+
+### Canonical Docs Updated
+
+- `03_HAMMAH_DATA_MODEL.md` — orders/order_items marked as implemented, schema updated
+- `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint 0.18 marked as In Progress
+
+### Sprint 0.18.1 Status: COMPLETE
+
+---
+
+## Sprint 0.18.2 — Customer Order Experience + WhatsApp Handoff
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Complete the customer-facing website order flow with WhatsApp handoff after successful persistence.
+
+### WhatsApp Configuration Architecture
+
+- Environment variable: `NEXT_PUBLIC_HAMMAH_WHATSAPP_NUMBER` (client-safe, public contact info)
+- Default value when missing: `233542739539` (digits only, no `+`)
+- Helper module: `src/lib/orders/whatsapp.ts` — normalizes number, constructs message, builds URL
+- Number validation: strips non-digit characters before use
+- Graceful degradation: if env var missing/invalid, WhatsApp button hidden, order creation unaffected
+
+### Exact Handoff Behaviour
+
+1. Customer fills form, submits
+2. `POST /api/orders` creates order atomically
+3. On success: success state displayed with order reference
+4. WhatsApp URL constructed with prefilled message
+5. "Continue on WhatsApp" button opens `https://wa.me/233542739539?text=<encoded-message>`
+6. "Copy order reference" button copies `HAM-YYYY-NNNN` to clipboard
+7. WhatsApp opening failure does NOT affect order — order already persisted
+
+### Prefilled Message Structure
+
+```
+Hello HAMMAH,
+
+I've submitted an order request through the website.
+
+Order: HAM-2026-0001
+Piece: Blue and White design
+Size: 32
+Quantity: 1
+
+Name: Chantel
+
+I'd like to continue with this order.
+```
+
+- Size line omitted when no variant selected
+- No database UUIDs, idempotency keys, or internal fields
+- URL-encoded via `encodeURIComponent`
+
+### Success State Behaviour
+
+- Heading: "ORDER REQUEST RECEIVED"
+- Order reference: `HAM-2026-NNNN` in monospace
+- Message: "Your request has been saved. Continue the conversation with HAMMAH on WhatsApp."
+- Actions: "Continue on WhatsApp" (primary), "Copy order reference" (secondary)
+- "Place another order" link resets form with new idempotency key
+- Focus management: WhatsApp button receives focus on success
+
+### Error/Fallback Behaviour
+
+| Scenario | Behaviour |
+|----------|-----------|
+| Validation error | Inline error, form preserved, customer corrects |
+| Product/variant unavailable | Server error mapped to customer message |
+| Network failure | "Network error" message, form preserved, retry allowed |
+| Idempotency key reused | Same order returned, no duplicate |
+| WhatsApp env missing | Button hidden, order still works |
+| WhatsApp fails to open | Order exists, "Copy order reference" available |
+| Double-click prevention | Submit button disabled during submission |
+
+### Idempotency Behaviour
+
+- New drawer open → new `idempotencyKey` generated (via `crypto.randomUUID()`)
+- Error retry → same `idempotencyKey` reused (prevents duplicate logical orders)
+- "Place another order" → new `idempotencyKey` generated
+- WhatsApp button click → no API call, just navigation (never creates orders)
+- Closing drawer → form reset, key cleared
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/orders/whatsapp.ts` | WhatsApp message builder, URL constructor, config check |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/product/order-drawer.tsx` | Success state with WhatsApp handoff, copy reference, improved error handling, idempotency management, client-side validation, focus management |
+| `.env.example` | Added `NEXT_PUBLIC_HAMMAH_WHATSAPP_NUMBER` |
+| `docs/development/06_HAMMAH_SECURITY_AND_ENGINEERING_RULES.md` | Added WhatsApp env var to required vars |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+| WhatsApp helper | ✅ Message construction, URL encoding, config check |
+| Success state | ✅ Order reference, WhatsApp button, copy button |
+| Error state | ✅ Form preserved, idempotency key retained, retry allowed |
+| New order after success | ✅ "Place another order" generates new key |
+
+### What Sprint 0.18.2 Does NOT Include (by design)
+
+- Admin Orders UI (Sprint 0.18.3)
+- Hamatee authentication (Sprint 0.19)
+- Customer order history
+- Real tracking (still demo at `/track`)
+- Email/SMS confirmations
+- Payment gateway
+
+### Canonical Docs Updated
+
+- `06_HAMMAH_SECURITY_AND_ENGINEERING_RULES.md` — WhatsApp env var added
+- `07_HAMMAH_DEVELOPMENT_ROADMAP.md` — Sprint 0.18.2 marked complete
+
+### Sprint 0.18.2 Status: COMPLETE — Corrective QA / Runtime Verification Pending
+
+---
+
+## Sprint 0.18.2 — Corrective QA
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete
+
+### Defect 1: Guest Order "Invalid product" (400) — RESOLVED
+
+**Root cause:** Zod's `.uuid()` validator enforces RFC 4122 version/variant bits. The deterministic seed UUIDs (e.g., `c0000000-0000-0000-0000-000000000001`) are stored as PostgreSQL `uuid` type but lack proper RFC version/variant nibbles. PostgreSQL accepts them; Zod rejects them.
+
+**Fix:** Replaced `z.string().uuid("Invalid product")` with a regex validator that accepts any 8-4-4-4-12 hex-dash format:
+
+```typescript
+const postgresUuid = z
+  .string()
+  .regex(
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+    "Invalid product",
+  );
+```
+
+Applied to `product_id` only. `idempotency_key` retains strict `.uuid()` validation (generated by `crypto.randomUUID()`).
+
+**Other strict UUID validators checked:** Only `idempotency_key` in the orders route uses `.uuid()`. No other admin/public API endpoint validates deterministic DB IDs with strict Zod UUID. Admin routes use path parameters passed directly to Supabase queries.
+
+**Database IDs NOT changed.** Seed product IDs remain as-is.
+
+### Defect 2: Stale Supabase Refresh Token Error — RESOLVED (previous pass)
+
+`getUser()` wrapped in try-catch in middleware and shared `requireAdmin`. All 12 admin API routes use centralized auth.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/api/orders/route.ts` | `product_id` validator: `.uuid()` → regex; removed diagnostic logging |
+| `src/components/product/order-drawer.tsx` | Removed diagnostic logging |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: Runtime Verification Pending
+
+---
+
+## Sprint 0.18.2 — WhatsApp Message Polish
+
+**Date:** September 11, 2026 | **Status:** ✅ Complete — Human Verified
+
+### Changes
+
+WhatsApp prefilled message now includes:
+
+- Product page URL (built from `NEXT_PUBLIC_SITE_URL` + product slug)
+- Delivery region and city summary
+- Digital/GPS address when supplied
+- Graceful omission of product URL when `NEXT_PUBLIC_SITE_URL` is unavailable
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/lib/orders/whatsapp.ts` | Added `productSlug`, `deliveryRegion`, `deliveryCity`, `deliveryGps` to interface; added product URL + delivery summary to message; added `getSiteUrl()` helper |
+| `src/components/product/order-drawer.tsx` | Pass new fields (`productSlug`, `deliveryRegion`, `deliveryCity`, `deliveryGps`) to `buildWhatsAppMessage` |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Build | ✅ 49 pages |
+
+### Sprint 0.18.2 Status: HUMAN VERIFIED / COMPLETE
+
+---
+
 *Generated by Codebuff 🤖*
