@@ -25,7 +25,8 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         sort_order,
         media_assets(id, public_url, alt_text, mime_type, media_type)
       ),
-      collection_products(collection_id, collections(id, name, slug))
+      collection_products(collection_id, collections(id, name, slug)),
+      video_asset:media_assets!products_video_media_id_fkey(public_url)
     `)
     .eq("id", id)
     .single();
@@ -71,12 +72,26 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const updateData: Record<string, unknown> = {};
   const allowedFields = [
     "name", "slug", "description", "category_id", "pricing_mode",
-    "price_amount", "availability", "status", "video_url", "sort_order",
+    "price_amount", "availability", "status", "video_url", "video_media_id", "sort_order", "size_guide_id",
   ];
 
   for (const field of allowedFields) {
     if (field in body) {
       updateData[field] = body[field];
+    }
+  }
+
+  // Derive video_url from video_media_id when set
+  if ("video_media_id" in body) {
+    if (body.video_media_id) {
+      const { data: asset } = await admin
+        .from("media_assets")
+        .select("public_url")
+        .eq("id", body.video_media_id)
+        .single();
+      updateData.video_url = asset?.public_url ?? null;
+    } else {
+      updateData.video_url = null;
     }
   }
 

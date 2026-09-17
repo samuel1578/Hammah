@@ -87,9 +87,17 @@ src/
 | `/product/[slug]` | Dynamic | Product detail page | Supabase via `getPublishedProductBySlug` + `getRelatedProducts` | Request-time dynamic (cookies) |
 | `/our-story` | Static | Editorial brand story | Hardcoded 761-line page | Static |
 | `/legacy` | Static | Hamatee membership marketing | Hardcoded editorial | Static |
-| `/saved` | Static | Saved pieces (demo, no persistence) | Legacy fixture (`products.ts`, first 4) | Static |
-| `/login` | Static | Sign-in (mocked, no real auth) | Frontend demo | Static |
-| `/signup` | Static | Registration (mocked, 2-step) | Frontend demo | Static |
+| `/saved` | Dynamic | Saved pieces — redirects to `/account/saved` if auth, signed-out landing if not | Supabase (server client) | Request-time dynamic |
+| `/login` | Static | Customer login (real Supabase Auth) | Supabase Auth | Static |
+| `/signup` | Static | Customer signup (real, 2-step, email verification) | Supabase Auth | Static |
+| `/forgot-password` | Static | Password reset request | Supabase Auth | Static |
+| `/reset-password` | Static | Password reset form | Supabase Auth | Static |
+| `/auth/callback` | Dynamic | Auth callback (email verification, OAuth) | Supabase Auth | Dynamic |
+| `/account` | Dynamic | Account overview — welcome, profile summary, links | Supabase (server client) | Request-time dynamic |
+| `/account/profile` | Dynamic | Profile editing — name, phone, birthday | Supabase (browser client) | Request-time dynamic |
+| `/account/saved` | Dynamic | Saved pieces — real Supabase data | Supabase (server client) | Request-time dynamic |
+| `/account/orders` | Dynamic | Order history — list of customer orders | Supabase (server client) | Request-time dynamic |
+| `/account/orders/[id]` | Dynamic | Order detail — items, delivery, snapshot | Supabase (server client) | Request-time dynamic |
 | `/track` | Static | Order tracking (demo) | Hardcoded timeline | Static |
 | `/delivery` | Static | Delivery information | Hardcoded editorial | Static |
 | `/returns` | Static | Returns policy | Hardcoded editorial | Static |
@@ -113,7 +121,7 @@ src/
 | `/admin/ctas/[id]` | Dynamic | CTA edit | Supabase | Dynamic |
 | `/admin/ctas/new` | Static | Create CTA | Supabase | Static |
 
-**Total:** 32 routes (16 public + 15 admin + `/dev/media`)
+**Total:** 34 routes (18 public + 15 admin + `/dev/media`)
 
 **Caching note:** All 5 Supabase-backed routes are request-time dynamic because the cookie-based Supabase server client (`src/lib/supabase/server.ts`) calls `cookies()`, which opts the route into dynamic rendering. No `export const revalidate`, `export const dynamic`, or `use cache` is used.
 
@@ -339,10 +347,14 @@ The order flow is **request-based**, not instant checkout:
 
 | Page | Implementation | Reality |
 |------|---------------|---------|
-| `/login` | Email/password form, `setTimeout` 800ms | Always shows error; no real auth |
-| `/signup` | 2-step form (personal → password), `setTimeout` 1000ms | Shows success; no data created |
-| Google OAuth | Button exists on login + signup | No handler attached |
-| Session | None | No cookies, tokens, or state |
+| `/login` | Email/password form, real `signInWithPassword` | Real authentication — session cookie established |
+| `/signup` | 2-step form, real `signUp` with metadata | Real signup — email verification required, profile created via trigger |
+| `/forgot-password` | Email form, `resetPasswordForEmail` | Real — sends reset link |
+| `/reset-password` | New password form, `updateUser` | Real — updates password after recovery link |
+| `/auth/callback` | Code exchange route | Real — exchanges auth code for session |
+| `/saved` | Demo with fixture products | No persistence, no auth integration |
+| Google OAuth | Removed | No approved requirement |
+| Header | `onAuthStateChange` listener | Shows user name + logout when signed in |
 
 ---
 

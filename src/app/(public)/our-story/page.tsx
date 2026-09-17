@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
+import { motion, useScroll, useTransform, useReducedMotion, AnimatePresence } from "motion/react";
 import { getMediaByRoute } from "@/data/media-manifest";
 import type { MediaSlot } from "@/data/media-manifest";
 import { TextReveal } from "@/components/motion/text-reveal";
@@ -11,6 +11,8 @@ import { MediaReveal } from "@/components/motion/media-reveal";
 import { Stagger, staggerItemVariants } from "@/components/motion/stagger";
 import { Marquee } from "@/components/editorial/marquee";
 import { Container } from "@/components/ui/container";
+import { useRotatingImagePair } from "@/components/editorial/rotating-image-pair";
+import { AnimatedBrandMark } from "@/components/editorial/animated-brand-mark";
 
 /* ═══════════════════════════════════════════════════
    OUR STORY — Editorial Redesign (Complete)
@@ -33,10 +35,7 @@ export default function OurStoryPage() {
   const hero = media.find((m) => m.section === "hero");
   const pov = media.find((m) => m.section === "pov");
   const african = media.find((m) => m.section === "african-fashion");
-  const craft01 = media.find((m) => m.id === "story-craft-01");
-  const craft02 = media.find((m) => m.id === "story-craft-02");
   const sourcing = media.find((m) => m.section === "sourcing");
-  const sustainability = media.find((m) => m.section === "sustainability");
   const closing = media.find((m) => m.section === "closing");
 
   return (
@@ -210,7 +209,7 @@ export default function OurStoryPage() {
       {/* ═══════════════════════════════════════
           6. CRAFT — ASYMMETRIC EDITORIAL
           ═══════════════════════════════════════ */}
-      <CraftSection craft01={craft01} craft02={craft02} />
+      <CraftSection />
 
       {/* ═══════════════════════════════════════
           6b. EDITORIAL STATEMENT
@@ -233,7 +232,7 @@ export default function OurStoryPage() {
       {/* ═══════════════════════════════════════
           8. SUSTAINABILITY — TYPOGRAPHY-LED
           ═══════════════════════════════════════ */}
-      <SustainabilitySection sustainabilitySlot={sustainability} />
+      <SustainabilitySection />
 
       {/* ═══════════════════════════════════════
           9. MARQUEE — "SL BY HAMMAH"
@@ -358,23 +357,27 @@ function PointOfViewSection({ povSlot }: { povSlot?: MediaSlot }) {
 
 /* ═══════════════════════════════════════════════════
    CRAFT — ASYMMETRIC EDITORIAL + PARALLAX
-   
+
    Desktop: dominant image (left, tall) + offset
    smaller image (right, shifted down) with subtle
    scroll-linked parallax. Typography below.
-   
+
    Mobile: dominant → offset secondary → statement → copy.
+
+   Images rotate from Collection 001 pool using
+   the shared useRotatingImagePair hook.
    ═══════════════════════════════════════════════════ */
 
-function CraftSection({
-  craft01,
-  craft02,
-}: {
-  craft01?: MediaSlot;
-  craft02?: MediaSlot;
-}) {
+function CraftSection() {
   const shouldReduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  const {
+    slotAUrl,
+    slotBUrl,
+    shouldReduceMotion: _rotationReduced,
+    sectionRef: rotationRef,
+  } = useRotatingImagePair();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -393,9 +396,15 @@ function CraftSection({
     shouldReduceMotion ? [0, 0] : [50, -20],
   );
 
+  /* Merge the two section refs */
+  const setRefs = (el: HTMLDivElement | null) => {
+    (sectionRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    (rotationRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+  };
+
   return (
     <section
-      ref={sectionRef}
+      ref={setRefs}
       className="py-16 md:py-24 lg:py-32"
       aria-labelledby="story-craft-heading"
     >
@@ -404,34 +413,50 @@ function CraftSection({
         <div className="hidden md:grid md:grid-cols-12 md:gap-8 lg:gap-12 md:items-start">
           {/* Dominant image — tall, left */}
           <div className="md:col-span-7 lg:col-span-7">
-            {craft01 && (
-              <MediaReveal className="aspect-[3/4]" scale={1.03}>
+            <div className="aspect-[3/4] relative overflow-hidden">
+              <AnimatePresence mode="wait">
                 <motion.img
-                  src={craft01.currentSrc}
-                  alt={craft01.intent}
-                  className="h-full w-full object-cover"
+                  key={slotAUrl}
+                  src={slotAUrl}
+                  alt="SL by Hammah — craft detail"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.015 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0.05 : 0.6,
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
                   loading="lazy"
                   style={{ y: parallaxMain }}
                 />
-              </MediaReveal>
-            )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Right column: offset smaller image + text */}
           <div className="md:col-span-5 lg:col-span-5 md:col-start-8 flex flex-col">
             {/* Smaller image — offset downward */}
             <div className="md:mt-24 lg:mt-32">
-              {craft02 && (
-                <MediaReveal className="aspect-[4/5] max-w-sm" scale={1.03}>
+              <div className="aspect-[4/5] max-w-sm relative overflow-hidden">
+                <AnimatePresence mode="wait">
                   <motion.img
-                    src={craft02.currentSrc}
-                    alt={craft02.intent}
-                    className="h-full w-full object-cover"
+                    key={slotBUrl}
+                    src={slotBUrl}
+                    alt="SL by Hammah — construction detail"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.015 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{
+                      duration: shouldReduceMotion ? 0.05 : 0.6,
+                      ease: [0.25, 0.1, 0.25, 1],
+                    }}
                     loading="lazy"
                     style={{ y: parallaxSecondary }}
                   />
-                </MediaReveal>
-              )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Typography below the offset image */}
@@ -466,20 +491,46 @@ function CraftSection({
         {/* Mobile: stacked intentionally */}
         <div className="md:hidden">
           {/* Dominant image */}
-          {craft01 && (
-            <MediaReveal className="aspect-[4/5] mb-4">
-              <img src={craft01.currentSrc} alt={craft01.intent} className="h-full w-full object-cover" loading="lazy" />
-            </MediaReveal>
-          )}
+          <div className="aspect-[4/5] mb-4 relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={`mobile-${slotAUrl}`}
+                src={slotAUrl}
+                alt="SL by Hammah — craft detail"
+                className="absolute inset-0 h-full w-full object-cover"
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.015 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0.05 : 0.6,
+                  ease: [0.25, 0.1, 0.25, 1],
+                }}
+                loading="lazy"
+              />
+            </AnimatePresence>
+          </div>
 
           {/* Offset secondary — shifted right, narrower */}
-          {craft02 && (
-            <div className="ml-auto w-[75%]">
-              <MediaReveal className="aspect-[3/4]">
-                <img src={craft02.currentSrc} alt={craft02.intent} className="h-full w-full object-cover" loading="lazy" />
-              </MediaReveal>
+          <div className="ml-auto w-[75%]">
+            <div className="aspect-[3/4] relative overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={`mobile-${slotBUrl}`}
+                  src={slotBUrl}
+                  alt="SL by Hammah — construction detail"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 1.015 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0.05 : 0.6,
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
+                  loading="lazy"
+                />
+              </AnimatePresence>
             </div>
-          )}
+          </div>
 
           {/* Statement + body */}
           <div className="mt-10">
@@ -510,12 +561,13 @@ function CraftSection({
 }
 
 /* ═══════════════════════════════════════════════════
-   SOURCING — TEXT/IMAGE OVERLAP
-   
-   Desktop: large image (~60%) with oversized
-   statement crossing the image boundary.
-   
-   Mobile: image → overlapping statement → body.
+   SOURCING — TEXT/IMAGE COMPOSITION
+
+   Desktop: image left (~55%), text right (~45%).
+   Text stays entirely on one background — no
+   overlap across image/page boundary.
+
+   Mobile: image → text. No overlap.
    ═══════════════════════════════════════════════════ */
 
 function SourcingSection({ sourcingSlot }: { sourcingSlot?: MediaSlot }) {
@@ -525,55 +577,10 @@ function SourcingSection({ sourcingSlot }: { sourcingSlot?: MediaSlot }) {
       aria-labelledby="story-sourcing-heading"
     >
       <Container>
-        {/* Desktop: overlap composition */}
-        <div className="hidden md:block">
-          <div className="relative">
-            {/* Large image — occupies ~60% width */}
-            <div className="w-[60%]">
-              {sourcingSlot && (
-                <MediaReveal className="aspect-[4/5]" scale={1.03}>
-                  <img
-                    src={sourcingSlot.currentSrc}
-                    alt={sourcingSlot.intent}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </MediaReveal>
-              )}
-            </div>
-
-            {/* Statement — overlapping the image edge */}
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[55%] pl-8 lg:pl-12">
-              <TextReveal
-                as="h2"
-                id="story-sourcing-heading"
-                className="type-oversized text-foreground"
-              >
-                What a piece begins with.
-              </TextReveal>
-              <Reveal delay={0.2} y={16}>
-                <p className="type-body text-muted-foreground mt-6 max-w-md">
-                  Before a piece becomes part of the Hammah wardrobe, it
-                  begins with the materials, colour and visual character
-                  that give it direction.
-                </p>
-                <p className="type-body text-muted-foreground mt-4 max-w-md">
-                  We are interested in textiles that can carry both expression
-                  and restraint — pieces that feel distinctive without losing
-                  their ability to be worn, styled and lived in.
-                </p>
-                <p className="type-body text-muted-foreground mt-4 max-w-md">
-                  As the brand develops, this section will continue to
-                  document more of the material choices behind each collection.
-                </p>
-              </Reveal>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: stacked with overlap */}
-        <div className="md:hidden">
-          <div className="relative">
+        {/* Desktop: clean side-by-side */}
+        <div className="hidden md:grid md:grid-cols-12 md:gap-10 lg:gap-16 md:items-center">
+          {/* Image — left, ~55% */}
+          <div className="md:col-span-6 lg:col-span-6">
             {sourcingSlot && (
               <MediaReveal className="aspect-[4/5]" scale={1.03}>
                 <img
@@ -584,34 +591,72 @@ function SourcingSection({ sourcingSlot }: { sourcingSlot?: MediaSlot }) {
                 />
               </MediaReveal>
             )}
-
-            {/* Statement overlapping image bottom */}
-            <div className="relative -mt-10 px-1">
-              <TextReveal
-                as="h2"
-                id="story-sourcing-heading-mobile"
-                className="type-headline text-foreground"
-              >
-                What a piece begins with.
-              </TextReveal>
-              <Reveal delay={0.1} y={12}>
-                <p className="type-body text-muted-foreground mt-4 max-w-md">
-                  Before a piece becomes part of the Hammah wardrobe, it
-                  begins with the materials, colour and visual character
-                  that give it direction.
-                </p>
-                <p className="type-body text-muted-foreground mt-4 max-w-md">
-                  We are interested in textiles that can carry both expression
-                  and restraint — pieces that feel distinctive without losing
-                  their ability to be worn, styled and lived in.
-                </p>
-                <p className="type-body text-muted-foreground mt-4 max-w-md">
-                  As the brand develops, this section will continue to
-                  document more of the material choices behind each collection.
-                </p>
-              </Reveal>
-            </div>
           </div>
+
+          {/* Text — right, ~45%, entirely on surface background */}
+          <div className="md:col-span-5 lg:col-span-5 md:col-start-8">
+            <TextReveal
+              as="h2"
+              id="story-sourcing-heading"
+              className="type-oversized text-foreground"
+            >
+              What a piece begins with.
+            </TextReveal>
+            <Reveal delay={0.2} y={16}>
+              <p className="type-body text-muted-foreground mt-6 max-w-lg">
+                Before a piece becomes part of the Hammah wardrobe, it
+                begins with the materials, colour and visual character
+                that give it direction.
+              </p>
+              <p className="type-body text-muted-foreground mt-4 max-w-lg">
+                We are interested in textiles that can carry both expression
+                and restraint — pieces that feel distinctive without losing
+                their ability to be worn, styled and lived in.
+              </p>
+              <p className="type-body text-muted-foreground mt-4 max-w-lg">
+                As the brand develops, this section will continue to
+                document more of the material choices behind each collection.
+              </p>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* Mobile: stacked, no overlap */}
+        <div className="md:hidden">
+          {sourcingSlot && (
+            <MediaReveal className="aspect-[4/5] mb-8" scale={1.03}>
+              <img
+                src={sourcingSlot.currentSrc}
+                alt={sourcingSlot.intent}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </MediaReveal>
+          )}
+
+          <TextReveal
+            as="h2"
+            id="story-sourcing-heading-mobile"
+            className="type-headline text-foreground"
+          >
+            What a piece begins with.
+          </TextReveal>
+          <Reveal delay={0.1} y={12}>
+            <p className="type-body text-muted-foreground mt-4 max-w-md">
+              Before a piece becomes part of the Hammah wardrobe, it
+              begins with the materials, colour and visual character
+              that give it direction.
+            </p>
+            <p className="type-body text-muted-foreground mt-4 max-w-md">
+              We are interested in textiles that can carry both expression
+              and restraint — pieces that feel distinctive without losing
+              their ability to be worn, styled and lived in.
+            </p>
+            <p className="type-body text-muted-foreground mt-4 max-w-md">
+              As the brand develops, this section will continue to
+              document more of the material choices behind each collection.
+            </p>
+          </Reveal>
         </div>
       </Container>
     </section>
@@ -619,17 +664,14 @@ function SourcingSection({ sourcingSlot }: { sourcingSlot?: MediaSlot }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   SUSTAINABILITY — TYPOGRAPHY-LED
-   
-   Predominantly typographic. No image-dominant grid.
-   Large statement + minimal supporting copy.
+   SUSTAINABILITY — TYPOGRAPHY-LED + BRAND MARK
+
+   Predominantly typographic. Animated contour/logo
+   brand mark below the copy replaces the former
+   static photograph.
    ═══════════════════════════════════════════════════ */
 
-function SustainabilitySection({
-  sustainabilitySlot,
-}: {
-  sustainabilitySlot?: MediaSlot;
-}) {
+function SustainabilitySection() {
   return (
     <section
       className="py-20 md:py-32 lg:py-40"
@@ -671,23 +713,14 @@ function SustainabilitySection({
               than make claims we cannot support.
             </p>
           </Reveal>
-
-          {/* Optional secondary image — subtle, not dominant */}
-          {sustainabilitySlot && (
-            <Reveal delay={0.3} y={20}>
-              <div className="mt-12 md:mt-16 mx-auto max-w-md">
-                <MediaReveal className="aspect-[16/9]" scale={1.02}>
-                  <img
-                    src={sustainabilitySlot.currentSrc}
-                    alt={sustainabilitySlot.intent}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </MediaReveal>
-              </div>
-            </Reveal>
-          )}
         </div>
+
+        {/* Animated brand mark — contour lines + secondary logo */}
+        <Reveal delay={0.3} y={20}>
+          <div className="mt-12 md:mt-16 mx-auto max-w-2xl h-[220px] sm:h-[260px] md:h-[300px] lg:h-[360px] xl:h-[420px]">
+            <AnimatedBrandMark />
+          </div>
+        </Reveal>
       </Container>
     </section>
   );

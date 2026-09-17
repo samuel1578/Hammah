@@ -1,148 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { COLLECTION_001_PIXIESET } from "@/data/pixieset-collection-001";
+import { AnimatePresence, motion } from "motion/react";
+import { useRotatingImagePair } from "@/components/editorial/rotating-image-pair";
 import { Reveal } from "@/components/motion/reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { Container } from "@/components/ui/container";
 import { BrandLogo } from "@/components/brand/brand-logo";
 
 /* ─────────────────────────────────────────────
-   IMAGE SELECTION
-   Uses the full 160-image Collection 001 pool.
-   Deterministic initial pair avoids hydration
-   mismatch; random pair selected after mount.
-   ───────────────────────────────────────────── */
+   HOME — IN THE DETAILS / CRAFT
 
-const INITIAL_PAIR: [number, number] = [6, 7];
-const ROTATION_INTERVAL = 1500;
-
-function pickRandom(exclude: number[]): number {
-  let idx: number;
-  do {
-    idx = Math.floor(Math.random() * COLLECTION_001_PIXIESET.length);
-  } while (
-    exclude.includes(COLLECTION_001_PIXIESET[idx].number)
-  );
-  return COLLECTION_001_PIXIESET[idx].number;
-}
-
-function getUrl(num: number): string {
-  return COLLECTION_001_PIXIESET.find((img) => img.number === num)?.url ?? "";
-}
-
-/* ─────────────────────────────────────────────
-   COMPONENT
+   Uses the shared useRotatingImagePair hook for
+   Collection 001 random image rotation. Layout
+   and MediaSlot sub-component retained as-is
+   to preserve existing appearance.
    ───────────────────────────────────────────── */
 
 export function HomeDetailCraft() {
-  const [slotA, setSlotA] = useState(INITIAL_PAIR[0]);
-  const [slotB, setSlotB] = useState(INITIAL_PAIR[1]);
-  const [mounted, setMounted] = useState(false);
-  const shouldReduceMotion = useReducedMotion() ?? false;
-
-  const slotARef = useRef(INITIAL_PAIR[0]);
-  const slotBRef = useRef(INITIAL_PAIR[1]);
-  const nextSlotRef = useRef<0 | 1>(0);
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const inViewRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  /* ── Keep refs in sync ── */
-  useEffect(() => { slotARef.current = slotA; }, [slotA]);
-  useEffect(() => { slotBRef.current = slotB; }, [slotB]);
-
-  /* ── Randomise after mount (client-only) ── */
-  useEffect(() => {
-    const a = pickRandom([INITIAL_PAIR[1]]);
-    const b = pickRandom([INITIAL_PAIR[0], a]);
-    slotARef.current = a;
-    slotBRef.current = b;
-    // Defer state updates to avoid setState-in-effect lint error
-    const id = requestAnimationFrame(() => {
-      setSlotA(a);
-      setSlotB(b);
-      setMounted(true);
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
-
-  /* ── Rotate one slot at a time ── */
-  const rotate = useCallback(() => {
-    const target = nextSlotRef.current;
-    nextSlotRef.current = target === 0 ? 1 : 0;
-    if (target === 0) {
-      const other = slotBRef.current;
-      setSlotA((current) => pickRandom([other, current]));
-    } else {
-      const other = slotARef.current;
-      setSlotB((current) => pickRandom([other, current]));
-    }
-  }, []);
-
-  /* ── Timer management ── */
-  const startTimers = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    timerRef.current = setTimeout(() => {
-      rotate();
-      intervalRef.current = setInterval(rotate, ROTATION_INTERVAL);
-    }, ROTATION_INTERVAL);
-  }, [rotate]);
-
-  const stopTimers = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  /* ── IntersectionObserver — pause when not visible ── */
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || shouldReduceMotion) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !inViewRef.current) {
-          inViewRef.current = true;
-          startTimers();
-        } else if (!entry.isIntersecting && inViewRef.current) {
-          inViewRef.current = false;
-          stopTimers();
-        }
-      },
-      { threshold: 0.2 },
-    );
-
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      stopTimers();
-    };
-  }, [startTimers, stopTimers, shouldReduceMotion]);
-
-  /* ── Cleanup on unmount ── */
-  useEffect(() => () => stopTimers(), [stopTimers]);
-
-  /* ── Preload incoming images ── */
-  useEffect(() => {
-    if (!mounted) return;
-    [slotA, slotB].forEach((num) => {
-      const img = new Image();
-      img.src = getUrl(num);
-    });
-  }, [mounted, slotA, slotB]);
-
-  const imgA = getUrl(slotA);
-  const imgB = getUrl(slotB);
+  const { slotAUrl, slotBUrl, shouldReduceMotion, sectionRef } =
+    useRotatingImagePair();
 
   return (
     <section
@@ -162,7 +38,7 @@ export function HomeDetailCraft() {
             <div className="grid grid-cols-5 gap-4">
               {/* Large primary detail image */}
               <MediaSlot
-                src={imgA}
+                src={slotAUrl}
                 alt="SL by Hammah — detail photography"
                 colSpan="col-span-3"
                 shouldReduceMotion={shouldReduceMotion}
@@ -170,7 +46,7 @@ export function HomeDetailCraft() {
 
               {/* Secondary detail — offset right on desktop */}
               <MediaSlot
-                src={imgB}
+                src={slotBUrl}
                 alt="SL by Hammah — construction detail"
                 colSpan="col-span-2"
                 offset

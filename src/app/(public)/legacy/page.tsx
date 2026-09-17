@@ -2,38 +2,72 @@
 
 import Link from "next/link";
 import { getMediaByRoute } from "@/data/media-manifest";
-import { CollectionHero } from "@/components/editorial/collection-hero";
 import { Reveal } from "@/components/motion/reveal";
 import { MediaReveal } from "@/components/motion/media-reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { Stagger, staggerItemVariants } from "@/components/motion/stagger";
 import { motion } from "motion/react";
 import { Container } from "@/components/ui/container";
-import { ShoppingBag, Heart, Star, Layers } from "lucide-react";
+import { ShoppingBag, Heart, User, CalendarHeart } from "lucide-react";
+import { AnimatedBrandMark } from "@/components/editorial/animated-brand-mark";
 
 const benefits = [
-  { icon: ShoppingBag, title: "Orders", description: "See current and previous orders in one place." },
-  { icon: Heart, title: "Saved Pieces", description: "Keep pieces you want to return to later." },
-  { icon: Star, title: "Member Privileges", description: "See any discounts or benefits assigned to your account." },
-  { icon: Layers, title: "Pieces Collected", description: "Build a simple record of completed Hammah purchases." },
+  { icon: Heart, title: "Saved Pieces", description: "Keep the pieces you want to return to, all in one place." },
+  { icon: ShoppingBag, title: "Order History", description: "See your past and current orders whenever you need them." },
+  { icon: User, title: "Your Profile", description: "The details that help HAMMAH know you — name, phone, and birthday." },
+  { icon: CalendarHeart, title: "A Birthday Worth Remembering", description: "HAMMAH wants every Hamatee to feel remembered when their day comes around." },
 ];
 
 export default function LegacyPage() {
   const media = getMediaByRoute("/legacy");
-  const hero = media.find((m) => m.section === "hero");
   const since = media.find((m) => m.section === "since");
-  const privileges = media.find((m) => m.section === "privileges");
 
   return (
     <>
-      {/* Hero */}
-      <CollectionHero
-        heading="The Hammah Legacy"
-        subheading="Stay closer to Hammah."
-        body="Joining the Hammah Legacy creates your Hamatee account and keeps your relationship with the brand in one place."
-        media={hero}
-        cta={{ label: "Become a Hamatee", href: "/signup" }}
-      />
+      {/* Hero — Motion-led composition */}
+      <section
+        className="flex min-h-[78svh] items-center bg-background py-16 md:min-h-[82svh] md:py-24"
+        aria-labelledby="legacy-hero-heading"
+      >
+        <Container>
+          <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-[1.05fr_0.95fr] md:gap-8 lg:gap-16">
+            {/* Left — Text */}
+            <div className="order-2 md:order-1">
+              <TextReveal
+                as="h1"
+                id="legacy-hero-heading"
+                className="font-serif italic text-4xl tracking-tight text-foreground sm:text-5xl md:text-5xl lg:text-6xl"
+              >
+                Stay close to what you love.
+              </TextReveal>
+
+              <Reveal delay={0.2} y={16}>
+                <p className="mt-5 max-w-md text-xl text-muted-foreground sm:text-2xl">
+                  Save the pieces that speak to you, keep your order history in
+                  one place, and let HAMMAH remember the details that make the
+                  relationship yours.
+                </p>
+              </Reveal>
+
+              <Reveal delay={0.4} y={12}>
+                <div className="mt-8">
+                  <Link
+                    href="/signup"
+                    className="inline-flex h-12 items-center rounded-md bg-accent px-7 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+                  >
+                    Become a Hamatee
+                  </Link>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* Right — Contour + Logo */}
+            <div className="order-1 md:order-2">
+              <AnimatedBrandMark />
+            </div>
+          </div>
+        </Container>
+      </section>
 
       {/* What You Keep */}
       <section className="py-20 md:py-32" aria-labelledby="legacy-keep-heading">
@@ -41,11 +75,13 @@ export default function LegacyPage() {
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-16 md:items-start">
             <div>
               <TextReveal as="h2" id="legacy-keep-heading" className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl">
-                Your Hammah, remembered.
+                Your HAMMAH, remembered.
               </TextReveal>
               <Reveal delay={0.15} y={12}>
                 <p className="mt-4 max-w-md text-base text-muted-foreground">
-                  The Legacy keeps the parts of your relationship with Hammah that matter.
+                  When you become a Hamatee, the parts of your relationship with
+                  HAMMAH that matter stay with you — saved for when you need
+                  them, and ready whenever you come back.
                 </p>
               </Reveal>
             </div>
@@ -71,68 +107,58 @@ export default function LegacyPage() {
         </Container>
       </section>
 
-      {/* Hamatee Since */}
-      <section className="py-20 md:py-32 bg-surface" aria-labelledby="legacy-since-heading">
+      {/* You become part of the story */}
+      <section className="py-20 md:py-32 bg-surface" aria-labelledby="legacy-story-heading">
         <Container>
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:items-center md:gap-16">
             <MediaReveal className="aspect-[4/5]">
               {since && (
-                <img src={since.currentSrc} alt="Hamatee membership" className="h-full w-full object-cover" loading="lazy" />
+                <img src={since.currentSrc} alt="HAMMAH Hamatee" className="h-full w-full object-cover" loading="lazy" />
               )}
             </MediaReveal>
             <div>
               <Reveal delay={0.1}>
                 <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                  Hamatee Since
+                  More than an account
                 </p>
               </Reveal>
               <Reveal delay={0.15}>
-                <p className="mt-2 font-serif italic text-7xl tracking-tight text-foreground sm:text-8xl">
-                  2026
-                </p>
+                <TextReveal as="h2" id="legacy-story-heading" className="mt-2 font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl">
+                  You become part of the story.
+                </TextReveal>
               </Reveal>
               <Reveal delay={0.2} y={12}>
                 <p className="mt-4 max-w-md text-base text-muted-foreground">
-                  Your membership date becomes part of your Legacy profile.
+                  Hamatee gives HAMMAH a way to remember the people who continue
+                  with us — the pieces you save, the orders you make, and the
+                  details you choose to share.
                 </p>
               </Reveal>
               <Reveal delay={0.25} y={12}>
-                <p className="mt-2 text-xs text-muted-foreground/60">
-                  This is a visual example of future member UI.
+                <p className="mt-3 max-w-md text-base text-muted-foreground">
+                  It means your relationship with HAMMAH does not have to begin
+                  again every time you return.
                 </p>
               </Reveal>
-            </div>
-          </div>
-        </Container>
-      </section>
 
-      {/* Privileges */}
-      <section className="py-20 md:py-32" aria-labelledby="legacy-privileges-heading">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:items-center md:gap-16">
-            <div className="order-2 md:order-1">
-              <TextReveal as="h2" id="legacy-privileges-heading" className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl">
-                A little something from Hammah.
-              </TextReveal>
-              <Reveal delay={0.15} y={12}>
-                <p className="mt-4 max-w-md text-base text-muted-foreground">
-                  Privileges are assigned by Hammah and may apply to a future order.
+              {/* Divider */}
+              <Reveal delay={0.3} y={8}>
+                <div className="my-8 h-px w-12 bg-border" />
+              </Reveal>
+
+              {/* Birthday subsection */}
+              <Reveal delay={0.35}>
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  Your birthday matters
                 </p>
               </Reveal>
-              <Reveal delay={0.25} y={12}>
-                <div className="mt-6 rounded-md border border-border bg-surface p-6">
-                  <p className="text-sm font-medium text-foreground">15% off your next piece</p>
-                  <p className="mt-1 text-xs text-muted-foreground/60">
-                    Example member benefit. Actual privileges vary by account.
-                  </p>
-                </div>
+              <Reveal delay={0.4} y={12}>
+                <p className="mt-3 max-w-md text-base text-muted-foreground">
+                  Tell us when your day is. HAMMAH wants every Hamatee to feel
+                  remembered when it comes around.
+                </p>
               </Reveal>
             </div>
-            <MediaReveal className="aspect-[3/4] order-1 md:order-2">
-              {privileges && (
-                <img src={privileges.currentSrc} alt="Member privileges" className="h-full w-full object-cover" loading="lazy" />
-              )}
-            </MediaReveal>
           </div>
         </Container>
       </section>
@@ -141,17 +167,17 @@ export default function LegacyPage() {
       <section className="py-20 md:py-32 bg-surface" aria-labelledby="legacy-cta-heading">
         <Container className="text-center">
           <TextReveal as="h2" id="legacy-cta-heading" className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl">
-            Join the Hammah Legacy.
+            Become a Hamatee.
           </TextReveal>
           <Reveal delay={0.15} y={12}>
             <p className="mt-4 mx-auto max-w-md text-base text-muted-foreground">
-              Create your account and become a Hamatee.
+              Create your HAMMAH account and start the relationship.
             </p>
           </Reveal>
           <Reveal delay={0.25} y={12}>
             <div className="mt-8">
               <Link href="/signup" className="inline-flex h-12 items-center rounded-md bg-accent px-6 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90">
-                Create Account
+                Become a Hamatee
               </Link>
             </div>
           </Reveal>

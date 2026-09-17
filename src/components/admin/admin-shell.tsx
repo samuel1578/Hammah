@@ -11,6 +11,7 @@ import {
   Image,
   Home,
   MousePointerClick,
+  Ruler,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tag },
   { href: "/admin/collections", label: "Collections", icon: FolderOpen },
+  { href: "/admin/size-guides", label: "Size Guides", icon: Ruler },
   { href: "/admin/media", label: "Media", icon: Image },
   { href: "/admin/homepage", label: "Homepage", icon: Home },
   { href: "/admin/ctas", label: "CTAs", icon: MousePointerClick },
@@ -115,7 +117,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-surface lg:flex">
         <div className="flex h-14 items-center border-b border-border px-4">
           <Link href="/admin" className="flex items-center">
-            <BrandLogo variant="secondary" className="h-6 w-auto" />
+            <BrandLogo variant="secondary" className="h-12 w-auto lg:h-16" />
           </Link>
           <span className="ml-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Admin
@@ -176,7 +178,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
           <Link href="/admin" className="ml-3 flex items-center">
-            <BrandLogo variant="secondary" className="h-5 w-auto" />
+            <BrandLogo variant="secondary" className="h-10 w-auto sm:h-12" />
           </Link>
           <span className="ml-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Admin
@@ -207,7 +209,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 className="flex items-center"
                 onClick={() => setMobileOpen(false)}
               >
-                <BrandLogo variant="secondary" className="h-6 w-auto" />
+            <BrandLogo variant="secondary" className="h-10 w-auto sm:h-12" />
               </Link>
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Admin

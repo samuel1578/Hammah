@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document.
 >
-> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
+> **Last verified against repo:** September 17, 2026 (Sprint 0.19)
 
 ---
 
@@ -37,8 +37,8 @@
 | Sort order | Admin | Within category |
 | Status | Admin | draft, published, archived |
 | Media | Admin (media picker) | Primary, hover, gallery, details |
-| Video | Admin (media picker) | Optional, future |
-| 360° set | Admin (upload) | Optional, future/provisional |
+| Video | Admin (media picker) | Optional, selected from Media Library (MP4/WebM) |
+| Size Guide | Admin (dropdown) | Optional, links to a size guide template |
 | Variants/Sizes | Admin | Per-product via product_variants |
 
 ---
@@ -124,7 +124,8 @@
 - Products (CRUD, publish/unpublish/archive)
 - Categories (CRUD, reorder)
 - Collections (CRUD, publish/unpublish/archive, add/remove/reorder products)
-- Media Library (upload, manage, select for products/collections/homepage)
+- Media Library (upload images + video, manage, select for products/collections/homepage)
+- Size Guides (CRUD, assign to products)
 - Homepage merchandising (featured products, hero images, collection feature)
 - Orders (view, update status, add notes)
 - Customers (view profiles, order history)

@@ -7,13 +7,14 @@ export async function getPublishedProducts(): Promise<CatalogueProduct[]> {
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order,
+      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
         media_asset:media_assets ( public_url )
       ),
-      product_variants ( size_label, size_value, available, sort_order )
+      product_variants ( size_label, size_value, available, sort_order ),
+      video_asset:media_assets!products_video_media_id_fkey ( public_url )
     `)
     .eq("status", "published")
     .order("sort_order");
@@ -29,13 +30,14 @@ export async function getPublishedProductBySlug(slug: string): Promise<Catalogue
   const { data: product, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order,
+      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
         media_asset:media_assets ( public_url )
       ),
-      product_variants ( size_label, size_value, available, sort_order )
+      product_variants ( size_label, size_value, available, sort_order ),
+      video_asset:media_assets!products_video_media_id_fkey ( public_url )
     `)
     .eq("slug", slug)
     .eq("status", "published")
@@ -52,13 +54,14 @@ export async function getRelatedProducts(currentSlug: string, count = 4): Promis
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order,
+      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
         media_asset:media_assets ( public_url )
       ),
-      product_variants ( size_label, size_value, available, sort_order )
+      product_variants ( size_label, size_value, available, sort_order ),
+      video_asset:media_assets!products_video_media_id_fkey ( public_url )
     `)
     .eq("status", "published")
     .neq("slug", currentSlug)
@@ -119,13 +122,14 @@ export async function getCollectionProducts(collectionSlug: string): Promise<Cat
     .select(`
       sort_order,
       product:products!inner (
-        id, slug, name, description, pricing_mode, availability, sort_order, status,
+        id, slug, name, description, pricing_mode, availability, sort_order, status, video_url, video_media_id, size_guide_id,
         category:categories ( slug, name ),
         product_media (
           sort_order, role,
           media_asset:media_assets ( public_url )
         ),
-        product_variants ( size_label, size_value, available, sort_order )
+        product_variants ( size_label, size_value, available, sort_order ),
+        video_asset:media_assets!products_video_media_id_fkey ( public_url )
       ),
       collection:collections!inner ( slug )
     `)
@@ -166,13 +170,14 @@ export async function getProductsByCategorySlug(categorySlug: string): Promise<C
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order,
+      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories!inner ( slug, name ),
       product_media (
         sort_order, role,
         media_asset:media_assets ( public_url )
       ),
-      product_variants ( size_label, size_value, available, sort_order )
+      product_variants ( size_label, size_value, available, sort_order ),
+      video_asset:media_assets!products_video_media_id_fkey ( public_url )
     `)
     .eq("status", "published")
     .eq("category.slug", categorySlug)
@@ -191,13 +196,14 @@ export async function getHomepageFeaturedProducts(): Promise<CatalogueProduct[]>
     .select(`
       sort_order,
       product:products!inner (
-        id, slug, name, description, pricing_mode, availability, sort_order, status,
+        id, slug, name, description, pricing_mode, availability, sort_order, status, video_url, video_media_id, size_guide_id,
         category:categories ( slug, name ),
         product_media (
           sort_order, role,
           media_asset:media_assets ( public_url )
         ),
-        product_variants ( size_label, size_value, available, sort_order )
+        product_variants ( size_label, size_value, available, sort_order ),
+        video_asset:media_assets!products_video_media_id_fkey ( public_url )
       )
     `)
     .eq("is_active", true)
@@ -228,6 +234,10 @@ function mapProduct(row: any): CatalogueProduct {
 
   const category = Array.isArray(row.category) ? row.category[0] : row.category;
 
+  // Prefer the joined video_asset URL; fall back to legacy video_url column
+  const videoAsset = Array.isArray(row.video_asset) ? row.video_asset[0] : row.video_asset;
+  const videoUrl = videoAsset?.public_url ?? row.video_url ?? null;
+
   return {
     dbId: row.id,
     id: row.slug,
@@ -238,6 +248,8 @@ function mapProduct(row: any): CatalogueProduct {
     pricingMode: row.pricing_mode,
     availability: row.availability,
     sortOrder: row.sort_order,
+    videoUrl,
+    sizeGuideId: row.size_guide_id ?? null,
     media: {
       primary,
       hover: hover ?? undefined,

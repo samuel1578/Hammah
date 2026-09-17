@@ -17,7 +17,7 @@ export const primaryNavigation: NavLink[] = [
 
 export const utilityNavigation: NavLink[] = [
   { label: "Saved", href: "/saved" },
-  { label: "Account", href: "/login" },
+  { label: "Account", href: "/account" },
   { label: "Track Order", href: "/track" },
 ];
 

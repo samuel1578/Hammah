@@ -173,26 +173,42 @@
 
 ## Sprint 0.19 — Hamatee Authentication + Account
 
-**Status:** 🔲 Not started
+**Status:** ✅ Complete (0.19A + 0.19B + 0.19C + Corrective Pass)
 
 **Goal:** Real authentication with persistent user accounts, saved pieces, and addresses.
 
-### Dependencies
-- Sprint 0.18 complete (orders working)
-- Auth with admin role working
+### Sprint 0.19A — Authentication & Security Foundation ✅
 
-### Major Deliverables
 - Real email/password signup via Supabase Auth
 - Real login/logout
-- Session handling (middleware, cookies)
 - Profile creation on signup (database trigger)
-- Google OAuth (if desired)
-- Authenticated account area (`/account`)
-- Account sections: Overview, Orders, Saved Pieces, Profile, Addresses
-- Saved pieces: real database persistence
-- Addresses: CRUD for delivery addresses
-- Legacy/account IA clarification
-- Account icon behaviour in header (logged in → /account, logged out → /login)
+- Role escalation prevention
+- Forgot/reset password flow
+- Auth callback route
+- Auth state in header/mobile navigation
+- Google OAuth buttons removed (no approved requirement)
+
+### Sprint 0.19B — Hamatee Account, Profile & Saved Pieces ✅
+
+- Account area (`/account`, `/account/profile`, `/account/saved`)
+- Server-side auth guard on account layout
+- Profile editing: name, phone, birthday (`date_of_birth`)
+- Email read-only from Supabase Auth
+- Persistent Saved Pieces (`saved_products` table)
+- PDP save/unsave with real auth
+- `/saved` redirects authenticated users, shows signed-out landing for others
+- Account navigation sidebar
+- Customer-only RLS on saved_products
+
+### Sprint 0.19C — Guest Birthday Enrolment, Authenticated Orders & Order History ✅
+
+- Guest birthday field in order form (conditional email validation)
+- Hamatee guest enrolment from orders (`hamatee_enrolments` table)
+- Existing Auth user detection (`existing_account` status)
+- Authenticated order ownership (`user_id = auth.uid()`, `source = 'hamatee'`)
+- Order history page (`/account/orders`)
+- Order detail page (`/account/orders/HAM-YYYY-NNNN`)
+- Brevo SMTP deferred to Sprint 0.20
 
 ### Out of Scope
 - Admin UI (complete)
@@ -208,6 +224,9 @@
 - Media selection in product/collection editors works
 - Homepage merchandising editors work
 - Order management works
+- Authenticated order ownership works
+- Guest birthday enrolment works
+- Order history visible in account area
 
 ---
 

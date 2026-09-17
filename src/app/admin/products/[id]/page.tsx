@@ -12,6 +12,8 @@ import {
   ChevronRight,
   X,
   GripVertical,
+  Video,
+  Trash2,
 } from "lucide-react";
 
 interface Category {
@@ -94,6 +96,8 @@ export default function EditProductPage() {
   const [allMedia, setAllMedia] = useState<MediaAsset[]>([]);
   const [allCollections, setAllCollections] = useState<Collection[]>([]);
   const [productCollections, setProductCollections] = useState<string[]>([]);
+  const [allSizeGuides, setAllSizeGuides] = useState<{ id: string; name: string }[]>([]);
+  const [sizeGuideId, setSizeGuideId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -119,6 +123,10 @@ export default function EditProductPage() {
   const [pickerRole, setPickerRole] = useState<string>("");
   const [pickerTitle, setPickerTitle] = useState("");
 
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false);
+  const [videoMediaId, setVideoMediaId] = useState<string | null>(null);
+  const [videoMediaUrl, setVideoMediaUrl] = useState<string | null>(null);
+
   const fetchProduct = useCallback(async () => {
     const res = await fetch(`/api/admin/products/${productId}`);
     if (!res.ok) {
@@ -137,6 +145,17 @@ export default function EditProductPage() {
     setStatus(data.status);
     setDescription(data.description ?? "");
     setVideoUrl(data.video_url ?? "");
+    setVideoMediaId(data.video_media_id ?? null);
+    // Derive video preview URL: prefer the joined video_asset, fall back to legacy video_url
+    const videoAsset = Array.isArray(data.video_asset) ? data.video_asset[0] : data.video_asset;
+    if (videoAsset?.public_url) {
+      setVideoMediaUrl(videoAsset.public_url);
+    } else if (data.video_url) {
+      setVideoMediaUrl(data.video_url);
+    } else {
+      setVideoMediaUrl(null);
+    }
+    setSizeGuideId(data.size_guide_id ?? null);
   }, [productId]);
 
   const fetchCategories = useCallback(async () => {
@@ -184,6 +203,14 @@ export default function EditProductPage() {
     if (cp) setProductCollections(cp.map((r: ProductCollection) => r.collection_id));
   }, [productId]);
 
+  const fetchSizeGuides = useCallback(async () => {
+    const res = await fetch("/api/admin/size-guides");
+    if (res.ok) {
+      const data = await res.json();
+      setAllSizeGuides(data.map((g: { id: string; name: string }) => ({ id: g.id, name: g.name })));
+    }
+  }, []);
+
   useEffect(() => {
     Promise.all([
       fetchProduct(),
@@ -191,8 +218,9 @@ export default function EditProductPage() {
       fetchVariants(),
       fetchMedia(),
       fetchCollections(),
+      fetchSizeGuides(),
     ]).then(() => setLoading(false));
-  }, [fetchProduct, fetchCategories, fetchVariants, fetchMedia, fetchCollections]);
+  }, [fetchProduct, fetchCategories, fetchVariants, fetchMedia, fetchCollections, fetchSizeGuides]);
 
   useEffect(() => {
     if (!slugEdited) {
@@ -237,6 +265,8 @@ export default function EditProductPage() {
         availability,
         status,
         video_url: videoUrl.trim() || null,
+        video_media_id: videoMediaId || null,
+        size_guide_id: sizeGuideId || null,
       }),
     });
 
@@ -362,6 +392,20 @@ export default function EditProductPage() {
       );
     }
     await fetchMedia();
+  }
+
+  function handleVideoPickerSelect(assets: MediaAsset[]) {
+    if (assets.length === 0) return;
+    const asset = assets[0];
+    setVideoMediaId(asset.id);
+    setVideoMediaUrl(asset.public_url);
+    setVideoUrl(asset.public_url);
+  }
+
+  function handleRemoveVideo() {
+    setVideoMediaId(null);
+    setVideoMediaUrl(null);
+    setVideoUrl("");
   }
 
   async function handleMoveMedia(mediaId: string, direction: "left" | "right") {
@@ -499,17 +543,84 @@ export default function EditProductPage() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="video_url" className="mb-1.5 block text-sm font-medium text-foreground">
-                    Video URL
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    Product Video
                   </label>
-                  <input
-                    id="video_url"
-                    type="url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    className="h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder-muted-foreground transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                    placeholder="https://..."
-                  />
+                  {videoMediaUrl ? (
+                    <div className="rounded-lg border border-border bg-background p-4">
+                      <div className="mb-3 flex items-center gap-3">
+                        <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-border bg-muted">
+                          <video
+                            src={videoMediaUrl}
+                            className="h-full w-full object-cover"
+                            preload="metadata"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Video className="h-6 w-6 text-white drop-shadow" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                            {videoMediaUrl.split("/").pop()}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setVideoPickerOpen(true)}
+                            >
+                              Change video
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRemoveVideo}
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                            >
+                              <Trash2 className="mr-1 h-3.5 w-3.5" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setVideoPickerOpen(true)}
+                      className="flex h-28 w-full items-center justify-center rounded-lg border-2 border-dashed border-border transition-colors hover:border-accent hover:bg-surface-elevated"
+                    >
+                      <div className="text-center">
+                        <Video className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Select product video
+                        </span>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          MP4 or WebM from the Media Library
+                        </p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="size_guide_id" className="mb-1.5 block text-sm font-medium text-foreground">
+                    Size Guide
+                  </label>
+                  <select
+                    id="size_guide_id"
+                    value={sizeGuideId ?? ""}
+                    onChange={(e) => setSizeGuideId(e.target.value || null)}
+                    className="h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  >
+                    <option value="">None</option>
+                    {allSizeGuides.map((sg) => (
+                      <option key={sg.id} value={sg.id}>
+                        {sg.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -992,6 +1103,15 @@ export default function EditProductPage() {
         mode={pickerMode}
         title={pickerTitle}
         excludeIds={productMedia.map((m) => m.media_asset_id)}
+      />
+
+      <MediaPicker
+        open={videoPickerOpen}
+        onClose={() => setVideoPickerOpen(false)}
+        onSelect={handleVideoPickerSelect}
+        mode="single"
+        title="Select product video"
+        forceMediaType="video"
       />
 
       <div className="mt-10 rounded-lg border border-red-300 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/50">

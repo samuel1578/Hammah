@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const admin = auth.admin;
 
   const body = await request.json();
-  const { name, slug, description, category_id, pricing_mode, price_amount, availability } = body;
+  const { name, slug, description, category_id, pricing_mode, price_amount, availability, video_url, video_media_id } = body;
 
   if (!name?.trim()) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -27,6 +27,17 @@ export async function POST(request: NextRequest) {
 
   if (!finalSlug) {
     return NextResponse.json({ error: "Slug is required." }, { status: 400 });
+  }
+
+  // Derive video_url from video_media_id when set
+  let resolvedVideoUrl = video_url?.trim() || null;
+  if (video_media_id) {
+    const { data: asset } = await admin
+      .from("media_assets")
+      .select("public_url")
+      .eq("id", video_media_id)
+      .single();
+    resolvedVideoUrl = asset?.public_url ?? null;
   }
 
   const { data: existing } = await admin
@@ -49,6 +60,8 @@ export async function POST(request: NextRequest) {
       pricing_mode: pricing_mode || "PRICE_ON_REQUEST",
       price_amount: price_amount ?? null,
       availability: availability || "COMING_SOON",
+      video_url: resolvedVideoUrl,
+      video_media_id: video_media_id || null,
       status: "draft",
     })
     .select()

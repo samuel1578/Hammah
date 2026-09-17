@@ -16,6 +16,8 @@ function toLegacyProducts(items: CatalogueProduct[]): Product[] {
     pricingMode: p.pricingMode,
     availability: p.availability,
     description: p.description,
+    videoUrl: p.videoUrl,
+    sizeGuideId: p.sizeGuideId,
     media: p.media,
     variants: p.variants,
   }));

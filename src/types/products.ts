@@ -2,7 +2,7 @@
 
 export type PricingMode = "PRICE_ON_REQUEST" | "FIXED";
 export type Availability = "AVAILABLE" | "COMING_SOON" | "SOLD_OUT";
-export type MediaMode = "photos" | "video" | "360";
+export type MediaMode = "photos" | "video";
 
 export interface ProductMedia {
   primary: string;
@@ -23,6 +23,8 @@ export interface Product {
   pricingMode: PricingMode;
   availability: Availability;
   description: string;
+  videoUrl: string | null;
+  sizeGuideId: string | null;
   media: ProductMedia;
   variants: ProductVariant[];
 }

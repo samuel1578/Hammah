@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Heart, Ruler, Truck } from "lucide-react";
+import { Ruler, Truck } from "lucide-react";
 import type { Product } from "@/types/products";
 import { ProductPrice } from "@/components/product/product-price";
 import { AvailabilityLabel } from "@/components/product/availability-label";
 import { Reveal } from "@/components/motion/reveal";
+import { SaveButton } from "@/components/account/save-button";
 
 interface ProductInfoPanelProps {
   product: Product;
@@ -14,6 +14,8 @@ interface ProductInfoPanelProps {
   onSizeChange: (size: string | null) => void;
   quantity: number;
   onQuantityChange: (q: number) => void;
+  sizeError: boolean;
+  onSizeGuideOpen?: () => void;
 }
 
 export function ProductInfoPanel({
@@ -23,8 +25,9 @@ export function ProductInfoPanel({
   onSizeChange,
   quantity,
   onQuantityChange,
+  sizeError,
+  onSizeGuideOpen,
 }: ProductInfoPanelProps) {
-  const [saved, setSaved] = useState(false);
 
   return (
     <>
@@ -85,6 +88,11 @@ export function ProductInfoPanel({
                 </button>
               ))}
             </div>
+            {sizeError && (
+              <p className="mt-2 text-sm text-destructive">
+                Please select a size first.
+              </p>
+            )}
             <p className="mt-2 text-xs text-muted-foreground">
               Choose the closest available option. Final sizing guidance will be
               added from approved measurements.
@@ -137,28 +145,17 @@ export function ProductInfoPanel({
         {/* Save + Size Guide row */}
         <Reveal delay={0.4}>
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setSaved(!saved)}
-              className={`inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-md border text-sm font-medium transition-colors ${
-                saved
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border bg-surface text-foreground hover:bg-surface-elevated"
-              }`}
-              aria-pressed={saved}
-            >
-              <Heart
-                className={`h-4 w-4 ${saved ? "fill-current" : ""}`}
-              />
-              {saved ? "Saved" : "Save Piece"}
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-md btn-engraved-secondary text-sm font-medium"
-            >
-              <Ruler className="h-4 w-4" />
-              Size Guide
-            </button>
+            <SaveButton productId={product.dbId} />
+            {product.sizeGuideId && onSizeGuideOpen && (
+              <button
+                type="button"
+                onClick={onSizeGuideOpen}
+                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-md btn-engraved-secondary text-sm font-medium"
+              >
+                <Ruler className="h-4 w-4" />
+                Size Guide
+              </button>
+            )}
           </div>
         </Reveal>
 

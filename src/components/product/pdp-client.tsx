@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { Product } from "@/types/products";
-import type { MediaMode } from "@/types/products";
+import type { Product, MediaMode } from "@/types/products";
 import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductVideo } from "@/components/product/product-video";
+import { MediaModeSelector } from "@/components/product/media-mode-selector";
 import { ProductInfoPanel } from "@/components/product/product-info-panel";
-import { MediaModeSelector, MediaModePlaceholder } from "@/components/product/media-mode-selector";
+import { SizeGuideModal } from "@/components/product/size-guide-modal";
 import { StickyMobileCTA } from "@/components/product/sticky-mobile-cta";
 import { OrderDrawer } from "@/components/product/order-drawer";
 import { RelatedPieces } from "@/components/product/related-pieces";
@@ -18,10 +19,28 @@ interface PdpClientProps {
 }
 
 export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
-  const [mediaMode, setMediaMode] = useState<MediaMode>("photos");
   const [orderOpen, setOrderOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [sizeError, setSizeError] = useState(false);
+  const [mediaMode, setMediaMode] = useState<MediaMode>("photos");
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+
+  const hasVariants = product.variants.length > 0;
+
+  const handleOrderOpen = () => {
+    if (hasVariants && !selectedSize) {
+      setSizeError(true);
+      return;
+    }
+    setSizeError(false);
+    setOrderOpen(true);
+  };
+
+  const handleSizeChange = (size: string | null) => {
+    setSelectedSize(size);
+    if (size) setSizeError(false);
+  };
 
   const allImages = [...product.media.gallery, ...product.media.details];
 
@@ -34,15 +53,19 @@ export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
             {/* Left — Gallery */}
             <div className="lg:col-span-7">
               <Reveal>
-                <MediaModeSelector onChange={setMediaMode} />
+                <div className="space-y-3">
+                  <MediaModeSelector
+                    videoUrl={product.videoUrl}
+                    activeMode={mediaMode}
+                    onChange={setMediaMode}
+                  />
+                  {mediaMode === "video" && product.videoUrl ? (
+                    <ProductVideo videoUrl={product.videoUrl} alt={product.name} />
+                  ) : (
+                    <ProductGallery images={allImages} alt={product.name} />
+                  )}
+                </div>
               </Reveal>
-              <div className="mt-4">
-                {mediaMode === "photos" ? (
-                  <ProductGallery images={allImages} alt={product.name} />
-                ) : (
-                  <MediaModePlaceholder mode={mediaMode} />
-                )}
-              </div>
             </div>
 
             {/* Right — Info panel (sticky on desktop) */}
@@ -50,11 +73,13 @@ export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
               <div className="lg:sticky lg:top-24">
                 <ProductInfoPanel
                   product={product}
-                  onOrderOpen={() => setOrderOpen(true)}
+                  onOrderOpen={handleOrderOpen}
                   selectedSize={selectedSize}
-                  onSizeChange={setSelectedSize}
+                  onSizeChange={handleSizeChange}
                   quantity={quantity}
                   onQuantityChange={setQuantity}
+                  sizeError={sizeError}
+                  onSizeGuideOpen={() => setSizeGuideOpen(true)}
                 />
               </div>
             </div>
@@ -68,7 +93,7 @@ export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
       {/* Sticky mobile CTA */}
       <StickyMobileCTA
         productName={product.name}
-        onOrderClick={() => setOrderOpen(true)}
+        onOrderClick={handleOrderOpen}
       />
 
       {/* Order drawer */}
@@ -79,6 +104,15 @@ export function PdpClient({ product, relatedProducts = [] }: PdpClientProps) {
         size={selectedSize}
         quantity={quantity}
       />
+
+      {/* Size Guide modal */}
+      {product.sizeGuideId && (
+        <SizeGuideModal
+          open={sizeGuideOpen}
+          onClose={() => setSizeGuideOpen(false)}
+          sizeGuideId={product.sizeGuideId}
+        />
+      )}
     </>
   );
 }

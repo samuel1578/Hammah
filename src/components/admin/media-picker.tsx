@@ -20,6 +20,8 @@ interface MediaPickerProps {
   mode: "single" | "multi";
   title: string;
   excludeIds?: string[];
+  /** When set, locks the type filter to this value and hides the filter bar. */
+  forceMediaType?: "image" | "video";
 }
 
 const typeFilters = ["all", "image", "video"] as const;
@@ -31,11 +33,12 @@ export function MediaPicker({
   mode,
   title,
   excludeIds = [],
+  forceMediaType,
 }: MediaPickerProps) {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<(typeof typeFilters)[number]>("all");
+  const [typeFilter, setTypeFilter] = useState<(typeof typeFilters)[number]>(forceMediaType ?? "all");
   const [selected, setSelected] = useState<Map<string, MediaAsset>>(new Map());
 
   const fetchAssets = useCallback(async () => {
@@ -49,23 +52,24 @@ export function MediaPicker({
     if (search.trim()) {
       query = query.or(`alt_text.ilike.%${search.trim()}%,storage_key.ilike.%${search.trim()}%`);
     }
-    if (typeFilter !== "all") {
-      query = query.eq("media_type", typeFilter);
+    const effectiveFilter = forceMediaType ?? typeFilter;
+    if (effectiveFilter !== "all") {
+      query = query.eq("media_type", effectiveFilter);
     }
 
     const { data } = await query;
     if (data) setAssets(data);
     setLoading(false);
-  }, [search, typeFilter]);
+  }, [search, typeFilter, forceMediaType]);
 
   useEffect(() => {
     if (open) {
       fetchAssets();
       setSelected(new Map());
       setSearch("");
-      setTypeFilter("all");
+      setTypeFilter(forceMediaType ?? "all");
     }
-  }, [open, fetchAssets]);
+  }, [open, fetchAssets, forceMediaType]);
 
   useEffect(() => {
     if (!open) return;
@@ -127,22 +131,24 @@ export function MediaPicker({
               className="h-9 w-full rounded-md border border-border bg-background pl-9 pr-3 text-sm text-foreground placeholder-muted-foreground transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
-          <div className="flex gap-1">
-            {typeFilters.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTypeFilter(t)}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-medium capitalize transition-colors ${
-                  typeFilter === t
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          {!forceMediaType && (
+            <div className="flex gap-1">
+              {typeFilters.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTypeFilter(t)}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-medium capitalize transition-colors ${
+                    typeFilter === t
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">

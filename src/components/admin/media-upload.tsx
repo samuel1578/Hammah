@@ -4,8 +4,11 @@ import { useState, useCallback, useRef } from "react";
 import { Upload, X, CheckCircle, AlertCircle, CloudUpload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const MAX_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm"] as const;
+const ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES] as const;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
 interface UploadFile {
   id: string;
@@ -20,12 +23,18 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
 
+function isVideo(mimeType: string): boolean {
+  return mimeType.startsWith("video/");
+}
+
 function validateFile(file: File): string | null {
   if (!(ACCEPTED_TYPES as readonly string[]).includes(file.type)) {
-    return `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP.`;
+    return `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP, MP4, WebM.`;
   }
-  if (file.size > MAX_SIZE) {
-    return `File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max: 10 MB.`;
+  const maxSize = isVideo(file.type) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  if (file.size > maxSize) {
+    const maxMB = maxSize / (1024 * 1024);
+    return `File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max: ${maxMB} MB.`;
   }
   return null;
 }
@@ -181,7 +190,7 @@ export function MediaUpload({ onComplete }: MediaUploadProps) {
           Drop files here or click to browse
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          JPEG, PNG, WebP — Max 10 MB each
+          JPEG, PNG, WebP, MP4, WebM — Max 10 MB (images) / 50 MB (video)
         </p>
       </div>
 
@@ -201,11 +210,19 @@ export function MediaUpload({ onComplete }: MediaUploadProps) {
               key={f.id}
               className="flex items-center gap-3 rounded-md border border-border bg-background p-3"
             >
-              <img
-                src={f.preview}
-                alt={f.file.name}
-                className="h-10 w-10 shrink-0 rounded object-cover"
-              />
+              {isVideo(f.file.type) ? (
+                <video
+                  src={f.preview}
+                  className="h-10 w-10 shrink-0 rounded object-cover"
+                  preload="metadata"
+                />
+              ) : (
+                <img
+                  src={f.preview}
+                  alt={f.file.name}
+                  className="h-10 w-10 shrink-0 rounded object-cover"
+                />
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
                   {f.file.name}

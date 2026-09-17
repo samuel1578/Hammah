@@ -3,8 +3,12 @@ import { requireAdmin } from "@/lib/supabase/require-admin";
 import { uploadObject } from "@/lib/cloudflare/r2";
 import { getMediaUrl } from "@/lib/media/url";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const MAX_SIZE = 10 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm"] as const;
+const ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES] as const;
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB
 
 function sanitizeFilename(name: string): string {
   return name
@@ -14,11 +18,13 @@ function sanitizeFilename(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function getMediaType(mimeType: string): "image" | "video" | "360_frame" {
+function getMediaType(mimeType: string): "image" | "video" {
   if (mimeType.startsWith("video/")) return "video";
-  if (mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp")
-    return "image";
   return "image";
+}
+
+function isVideo(mimeType: string): boolean {
+  return mimeType.startsWith("video/");
 }
 
 export async function POST(request: NextRequest) {
@@ -36,14 +42,16 @@ export async function POST(request: NextRequest) {
 
   if (!(ACCEPTED_TYPES as readonly string[]).includes(file.type)) {
     return NextResponse.json(
-      { error: `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP.` },
+      { error: `Invalid file type "${file.type}". Accepted: JPEG, PNG, WebP, MP4, WebM.` },
       { status: 400 },
     );
   }
 
-  if (file.size > MAX_SIZE) {
+  const maxSize = isVideo(file.type) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  if (file.size > maxSize) {
+    const maxMB = maxSize / (1024 * 1024);
     return NextResponse.json(
-      { error: `File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max: 10 MB.` },
+      { error: `File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max: ${maxMB} MB.` },
       { status: 400 },
     );
   }

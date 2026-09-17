@@ -11,6 +11,8 @@ export interface CatalogueProduct {
   pricingMode: PricingMode;
   availability: Availability;
   sortOrder: number;
+  videoUrl: string | null;
+  sizeGuideId: string | null;
   media: {
     primary: string;
     hover?: string;

@@ -1211,3 +1211,378 @@ Order form now clearly distinguishes required vs optional fields with native `re
 | Build | ✅ 49 pages |
 
 ### Sprint 0.18.2 Status: HUMAN VERIFIED / COMPLETE
+
+---
+
+## Sprint 0.19A — Authentication & Security Foundation
+
+**Date:** September 16, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Replace mocked customer authentication with real, secure Supabase Auth flow and resolve the profile/RLS security blockers identified in the Sprint 0.19 investigation.
+
+### Migration: 00004_customer_auth_foundation.sql
+
+- `handle_new_user()` trigger function: auto-creates `profiles` row on `auth.users` INSERT, extracts `first_name`, `last_name`, `phone` from `raw_user_meta_data`, defaults `role` to `'customer'`, uses `ON CONFLICT DO NOTHING`
+- `prevent_role_escalation()` trigger function: BEFORE UPDATE on `profiles` raises exception if `role` is changed by non-admin users
+- Replaced profiles UPDATE RLS policy: now includes `WITH CHECK` that prevents role modification by non-admins
+
+### Auth Architecture
+
+| Flow | Implementation |
+|------|---------------|
+| Signup | `supabase.auth.signUp()` with `options.data` metadata → trigger creates profile → email verification required |
+| Login | `supabase.auth.signInWithPassword()` → session cookie → `router.refresh()` |
+| Logout | `supabase.auth.signOut()` → redirect `/` → `router.refresh()` |
+| Forgot password | `supabase.auth.resetPasswordForEmail()` with redirect to `/auth/callback?next=/reset-password` |
+| Reset password | `/auth/callback` exchanges code for session → `/reset-password` page → `supabase.auth.updateUser({ password })` |
+| Auth callback | `/auth/callback` route exchanges auth code for session, redirects safely |
+| Session state | Header uses `onAuthStateChange` listener, shows user name/logout when authenticated |
+
+### Security Fixes
+
+- **Role escalation blocked:** `prevent_role_escalation` trigger + restricted UPDATE RLS policy
+- **Profile creation:** Automatic via database trigger — no application-level INSERT needed
+- **Google OAuth:** Removed from login and signup pages (no approved requirement)
+
+### Pages Changed
+
+| Page | Change |
+|------|--------|
+| `/login` | Real `signInWithPassword`, error handling, wired forgot password link |
+| `/signup` | Real `signUp` with metadata, email verification state, password validation |
+| `/forgot-password` | New page — email entry, sends reset link |
+| `/reset-password` | New page — new password form after recovery link |
+| `/auth/callback` | New route — exchanges auth code for session |
+| Header | Auth state awareness — shows user name + logout when signed in |
+| Mobile menu | Auth state awareness — shows sign in/sign out |
+
+### Admin Regression Results
+
+- Admin login unchanged (`/admin/login` uses same `signInWithPassword` pattern)
+- Admin shell logout unchanged
+- Middleware matcher unchanged (`/admin/:path*` only)
+- Profile trigger does not affect existing admin accounts (ON CONFLICT DO NOTHING)
+- Admin RLS policies unchanged
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| TypeScript | ✅ Clean |
+| Lint | ✅ 0 errors, 1 pre-existing warning (`<img>` vs `next/image`) |
+| Build | ✅ 55 pages (6 new: `/forgot-password`, `/reset-password`, `/auth/callback` + admin variants) |
+
+### Dashboard Configuration Still Required
+
+- Supabase Dashboard → Authentication → Email Templates: configure verification and reset templates
+- Supabase Dashboard → Authentication → URL Configuration: set Site URL and Redirect URLs
+- Ensure `NEXT_PUBLIC_SITE_URL` env var is set in production
+
+### Deferred to Sprint 0.19B
+
+- `/account` dashboard
+- Profile editing
+- Saved Pieces persistence
+- `saved_products` table
+
+### Deferred to Sprint 0.19C
+
+- Authenticated order ownership
+- Order history
+- Order detail
+- `create_order` ownership changes
+
+### Sprint 0.19A Status: COMPLETE
+
+---
+
+## Sprint 0.19B — Hamatee Account, Profile & Saved Pieces
+
+**Date:** September 16, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Build the first complete authenticated Hamatee customer area on top of the production Supabase Auth foundation completed in Sprint 0.19A.
+
+### Migration: 00005_hamatee_account_saved.sql
+
+- `profiles.date_of_birth` — nullable `date` column for birthday storage
+- `saved_products` table — `id`, `user_id` (FK → auth.users ON DELETE CASCADE), `product_id` (FK → products ON DELETE CASCADE), `created_at`, `UNIQUE(user_id, product_id)`
+- RLS policies: SELECT/INSERT/DELETE for authenticated users on own rows only
+- Indexes: `idx_saved_products_user_id`, `idx_saved_products_user_product`
+
+### Account Architecture
+
+| Route | Type | Purpose |
+|-------|------|---------|
+| `/account` | Server | Account overview — welcome, profile summary, links |
+| `/account/profile` | Client | Profile editing — name, phone, birthday |
+| `/account/saved` | Server | Saved pieces — real Supabase data |
+| `/saved` | Server | Redirects to `/account/saved` if authenticated; signed-out landing if not |
+
+### Account Layout
+
+- Server Component with auth guard
+- Calls `auth.getUser()` — redirects to `/login` if unauthenticated
+- Fetches profile for welcome message
+- Renders account navigation sidebar + main content
+
+### Profile
+
+- Editable: first name, last name, phone, birthday
+- Read-only: email (from Supabase Auth)
+- Birthday: native `<input type="date">`, max today, validated not in future
+- Uses client-side Supabase browser client with RLS protection
+- States: loading, saving, success, error
+
+### Saved Pieces
+
+- Real `saved_products` table with FK to `products`
+- PDP Save Button: checks save state on load, toggles save/unsave
+- Signed-out PDP: redirects to `/login?next=...`
+- `/account/saved`: lists saved products with images, remove button
+- Empty state: "Nothing saved yet" with CTA to Collection 001
+- Archived products: show "No longer available" instead of order link
+- Duplicate prevention: UNIQUE constraint + disable while mutating
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/00005_hamatee_account_saved.sql` | DOB column, saved_products table, RLS |
+| `src/app/(public)/account/layout.tsx` | Server auth guard, account shell |
+| `src/app/(public)/account/page.tsx` | Account overview |
+| `src/app/(public)/account/profile/page.tsx` | Profile editing with DOB |
+| `src/app/(public)/account/saved/page.tsx` | Saved pieces listing |
+| `src/components/account/account-nav.tsx` | Account navigation sidebar |
+| `src/components/account/save-button.tsx` | PDP save/unsave button |
+| `src/components/account/saved-piece-card.tsx` | Saved piece card with remove |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/saved/page.tsx` | Server component — redirect if auth, signed-out landing if not |
+| `src/components/product/product-info-panel.tsx` | Replaced local save state with SaveButton component |
+| `src/components/layout/site-header.tsx` | Account link for authenticated users |
+| `src/components/layout/mobile-menu.tsx` | Account + Saved Pieces links for authenticated users |
+| `src/data/navigation.ts` | Account utility link points to `/account` |
+
+### Security Verification
+
+| Test | Result |
+|------|--------|
+| Unauthenticated `/account` | Redirects to `/login` |
+| Unauthenticated `/account/profile` | Redirects to `/login` |
+| Unauthenticated `/account/saved` | Redirects to `/login` |
+| Cross-user profile | BLOCKED — RLS `id = auth.uid()` |
+| Cross-user saved rows | BLOCKED — RLS `user_id = auth.uid()` |
+| Role escalation | BLOCKED — `prevent_role_escalation` trigger preserved |
+| Customer → `/admin` | BLOCKED — middleware matcher unchanged |
+| FK invalid product_id | BLOCKED — foreign key constraint |
+| Service role in browser | NOT PRESENT |
+
+### Admin Regression
+
+- Admin login unchanged
+- Admin shell unchanged
+- Middleware matcher unchanged (`/admin/:path*` only)
+- Profile `date_of_birth` nullable — no impact on existing admin rows
+- Admin RLS policies unchanged
+
+### Guest Order Regression
+
+- Guest email remains optional
+- Guest order flow unchanged
+- WhatsApp flow unchanged
+- No birthday field in order form
+- No conditional email requirement
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean |
+| `npm run lint` | ✅ 0 new errors (pre-existing admin lint errors only) |
+| `npm run build` | ✅ 58 pages (3 new: `/account`, `/account/profile`, `/account/saved`) |
+
+### Dashboard Configuration Still Required
+
+- Supabase Dashboard → Authentication → URL Configuration: add `http://localhost:3000/account` to Redirect URLs if needed
+
+### Deferred to Sprint 0.19C
+
+Explicitly NOT implemented:
+- Guest birthday field in order form
+- Conditional guest email requirement
+- Hamatee guest enrolment
+- Hamatee invitation flow
+- Authenticated order ownership
+- Order history
+- Order detail
+- `create_order` ownership changes
+
+### Sprint 0.19B Status: COMPLETE
+
+---
+
+## Sprint 0.19C — Guest Birthday Enrolment, Authenticated Orders & Order History
+
+**Date:** September 17, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Complete the Hamatee/customer integration by connecting authenticated users to the unified order system, implementing the client-approved birthday-triggered Hamatee enrolment rule for guest orders, and exposing secure customer order history.
+
+### Migration: 00006_hamatee_orders_enrolment.sql
+
+- `hamatee_enrolments` table: records guest birthday enrolment intent with `order_id`, `email`, `date_of_birth`, `status`, `activated_user_id`, lifecycle timestamps
+- Status values: `pending`, `invited`, `activated`, `existing_account`, `failed`, `cancelled`
+- `create_order` RPC updated: accepts optional `p_user_id` and `p_source` parameters for authenticated ownership
+- `create_hamatee_enrolment` RPC: server-side function that checks for existing auth users by email, creates enrolment with correct status
+- RLS policies: admin read/update on enrolments; no public access (personal data)
+- Indexes: `UNIQUE(order_id)`, `email`, `status`
+- Trigger: `handle_updated_at()` on enrolments table
+
+### Birthday Rule Implementation
+
+| Scenario | Behaviour |
+|----------|-----------|
+| No DOB + No email | Valid guest order |
+| No DOB + email | Valid guest order |
+| DOB + email | Valid order + pending enrolment intent |
+| DOB + no email | Validation error (client + server) |
+| DOB + existing email | Valid order + existing_account enrolment |
+
+### Authenticated Order Ownership
+
+- Signed-out: `user_id = NULL`, `source = 'website_guest'`
+- Signed-in: `user_id = auth.uid()`, `source = 'hamatee'`
+- Identity derived server-side from session — client cannot spoof
+
+### Customer Order History
+
+| Route | Type | Purpose |
+|-------|------|---------|
+| `/account/orders` | Server | Order history list with thumbnails, status, delivery summary |
+| `/account/orders/[id]` | Server | Full order detail — items, customer snapshot, delivery |
+
+- RLS enforced: `user_id = auth.uid()` — cross-user access blocked
+- Uses order number in URL (`HAM-YYYY-NNNN`) — human-safe
+- Snapshot data rendered (immutable product data at order time)
+- Empty state with CTA to Collection 001
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/00006_hamatee_orders_enrolment.sql` | Enrolment table, updated create_order RPC, create_hamatee_enrolment RPC |
+| `src/lib/hamatee/enrolment.ts` | Enrolment service boundary (server-side only) |
+| `src/app/(public)/account/orders/page.tsx` | Order history list |
+| `src/app/(public)/account/orders/[id]/page.tsx` | Order detail |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/api/orders/route.ts` | Auth session check, user_id/source derivation, DOB handling, enrolment creation |
+| `src/components/product/order-drawer.tsx` | Birthday field, conditional email required state, DOB validation, enrolment message copy |
+| `src/lib/orders/types.ts` | Added `date_of_birth` to `CreateOrderRequest` |
+| `src/components/account/account-nav.tsx` | Added Orders nav item with Package icon |
+| `src/app/(public)/account/page.tsx` | Added Orders card to overview |
+
+### Security Verification
+
+| Test | Result |
+|------|--------|
+| Cross-user order access | BLOCKED — RLS `user_id = auth.uid()` |
+| Cross-user enrolment access | BLOCKED — no public RLS policy |
+| Ownership spoofing | BLOCKED — server derives user_id from session |
+| Existing account takeover | BLOCKED — no auth link, enrolment marked `existing_account` |
+| Service role exposure | NOT PRESENT — service-role only in server-side code |
+
+### Guest Order Regression
+
+- Guest order flow unchanged (email optional by default)
+- Birthday optional
+- WhatsApp handoff unchanged
+- Idempotency preserved
+- Saved Pieces unchanged
+
+### Admin Regression
+
+- Admin login unchanged
+- Admin shell unchanged
+- Admin RLS policies unchanged
+- No enrolment exposure in Admin UI
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean |
+| `npm run lint` | ✅ 0 new errors |
+| `npm run build` | ✅ 62 pages (2 new: `/account/orders`, `/account/orders/[id]`) |
+
+### Brevo / Email Status
+
+- Brevo SMTP not configured in this sprint
+- Branded invitation/confirmation emails remain deferred to Sprint 0.20
+- Enrolment status set to `pending` until email delivery is production-ready
+
+### Sprint 0.19C Status: COMPLETE
+
+---
+
+## Sprint 0.19 Corrective Pass — Hamatee Positioning + Signup Birthday
+
+**Date:** September 17, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Align public Hamatee messaging and signup flow with the actual HAMMAH product. Replace generic/fake membership language with honest, editorial positioning. Make birthday required at signup.
+
+### Changes
+
+- **Homepage `home-legacy.tsx`:** Full rewrite — editorial relationship-first messaging ("Stay a little closer to HAMMAH"), real benefits (saved pieces, order history, profile, birthday), "Become a Hamatee" CTA → `/signup`
+- **`/legacy/page.tsx`:** Full rewrite — honest positioning ("What is Hamatee?"), real features, birthday section, removed fake "Member Privileges" and "15% off" card
+- **`/signup/page.tsx`:** Added required birthday field in Step 2, DOB validation (required, valid date, not future), DOB in signup metadata, CTA → "Become a Hamatee"
+- **Migration `00007_signup_birthday_profile.sql`:** Updated `handle_new_user()` trigger to extract `date_of_birth` from signup metadata
+
+### Migration 00007 Details
+
+- Replaced `handle_new_user()` to parse `date_of_birth` from `raw_user_meta_data`
+- Safe date parsing with `BEGIN...EXCEPTION` block (invalid dates → NULL)
+- `ON CONFLICT (id) DO UPDATE` preserves existing profile data
+- All existing behavior preserved (first_name, last_name, phone, role = 'customer')
+- SECURITY DEFINER + safe search_path retained
+- Role escalation prevention trigger untouched
+
+### Guest Order Regression
+
+| Scenario | Expected | Result |
+|----------|----------|--------|
+| No DOB + no email | Valid guest order | ✅ Preserved |
+| No DOB + email | Valid guest order | ✅ Preserved |
+| DOB + email | Valid + enrolment | ✅ Preserved |
+| DOB + no email | 400 error | ✅ Preserved |
+
+### Security Regression
+
+| Check | Result |
+|-------|--------|
+| Customer role escalation | ✅ Blocked |
+| DOB cannot alter account role | ✅ Profile UPDATE policy checks role |
+| Admin auth | ✅ Unaffected |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean |
+| `npm run lint` | ✅ 0 new errors (95 pre-existing) |
+| `npm run build` | ✅ 62 pages |
+
+### Sprint 0.19 Corrective Pass Status: COMPLETE

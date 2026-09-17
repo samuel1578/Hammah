@@ -150,12 +150,12 @@ body.menu-open {
   font-size: clamp(2.75rem, 5vw, 5.5rem);
 }
 
-/* Eyebrow label */
+/* Eyebrow label — editorial section marker */
 .type-eyebrow {
   font-family: var(--font-dm-sans);
   font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 

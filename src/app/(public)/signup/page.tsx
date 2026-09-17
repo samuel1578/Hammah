@@ -8,12 +8,13 @@ import {
   EyeOff,
   ArrowRight,
   ArrowLeft,
-  Check,
+  Mail,
 } from "lucide-react";
 import { getMediaById } from "@/data/media-manifest";
+import { createClient } from "@/lib/supabase/client";
 
 type Step = 1 | 2;
-type SignupSuccess = "complete" | "google-profile" | null;
+type PageState = "form" | "loading" | "verify-email" | "error";
 type FieldErrors = Record<string, string>;
 
 export default function SignupPage() {
@@ -31,14 +32,15 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
 
   // Step 2 fields
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
 
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [success, setSuccess] = useState<SignupSuccess>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [pageState, setPageState] = useState<PageState>("form");
+  const [globalError, setGlobalError] = useState("");
 
   const goToStep = (target: Step) => {
     setDirection(target > step ? 1 : -1);
@@ -60,7 +62,14 @@ export default function SignupPage() {
 
   const validateStep2 = (): boolean => {
     const e: FieldErrors = {};
+    if (!dateOfBirth.trim()) e.dateOfBirth = "Your birthday is required";
+    else {
+      const dob = new Date(dateOfBirth);
+      if (isNaN(dob.getTime())) e.dateOfBirth = "Please enter a valid date";
+      else if (dob > new Date()) e.dateOfBirth = "Birthday cannot be in the future";
+    }
     if (!password) e.password = "Password is required";
+    else if (password.length < 8) e.password = "Password must be at least 8 characters";
     if (!agreeTerms) e.terms = "You must agree to the Terms & Conditions";
     if (!agreePrivacy) e.privacy = "You must acknowledge the Privacy Policy";
     setErrors(e);
@@ -72,27 +81,52 @@ export default function SignupPage() {
     if (validateStep1()) goToStep(2);
   };
 
-  const handleStep2Submit = (e: FormEvent) => {
+  const handleStep2Submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateStep2()) return;
-    setIsLoading(true);
-    // Frontend demonstration — no real signup
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccess("complete");
-    }, 1000);
+
+    setPageState("loading");
+    setGlobalError("");
+
+    try {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            phone: phone.trim(),
+            date_of_birth: dateOfBirth.trim() || null,
+          },
+        },
+      });
+
+      if (authError) {
+        const msg = authError.message.toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already")) {
+          setGlobalError("An account with this email already exists. Please sign in instead.");
+        } else if (msg.includes("valid email")) {
+          setGlobalError("Please enter a valid email address.");
+        } else if (msg.includes("password")) {
+          setGlobalError("Password does not meet requirements. Please use at least 8 characters.");
+        } else {
+          setGlobalError("Something went wrong creating your account. Please try again.");
+        }
+        setPageState("error");
+        return;
+      }
+
+      setPageState("verify-email");
+    } catch {
+      setGlobalError("Network error. Please check your connection and try again.");
+      setPageState("error");
+    }
   };
 
-  const handleGoogleSignup = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccess("google-profile");
-    }, 800);
-  };
-
-  // Google profile completion state
-  if (success === "google-profile") {
+  // Email verification state
+  if (pageState === "verify-email") {
     return (
       <div className="flex min-h-[100svh] flex-col items-center justify-center px-6 py-16">
         <motion.div
@@ -101,96 +135,36 @@ export default function SignupPage() {
           transition={{ duration: 0.6 }}
           className="w-full max-w-lg text-center"
         >
-          <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
-            <Check className="h-8 w-8 text-accent" />
+          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
+            <Mail className="h-10 w-10 text-accent" />
           </div>
-          <h1 className="font-serif italic text-3xl leading-tight tracking-tight text-foreground sm:text-4xl">
-            One last thing.
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Where can Hammah reach you?
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setSuccess("complete");
-            }}
-            className="mt-8 space-y-5"
-          >
-            <div>
-              <label
-                htmlFor="google-phone"
-                className="mb-2 block text-sm font-medium text-foreground"
-              >
-                Phone / WhatsApp
-              </label>
-              <input
-                id="google-phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                placeholder="+233 XX XXX XXXX"
-                className="h-14 w-full rounded-md border border-border bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-            </div>
-            <button
-              type="submit"
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-base font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-            >
-              Complete Account
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Frontend demonstration only. Live account creation will be connected
-            in the Appwrite authentication phase.
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Success state
-  if (success === "complete") {
-    return (
-      <div className="flex min-h-[100svh] flex-col items-center justify-center px-6 py-16">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-          className="w-full max-w-lg text-center"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 200 }}
-            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-accent/10"
-          >
-            <Check className="h-10 w-10 text-accent" />
-          </motion.div>
           <h1 className="font-serif italic text-3xl leading-tight tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            Welcome to the Hammah Legacy.
+            Check your email.
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            Your Hamatee account has been created.
+            We&apos;ve sent a verification link to{" "}
+            <span className="font-medium text-foreground">{email}</span>.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            Frontend demonstration only. Live account creation will be connected
-            in the Appwrite authentication phase.
+            Click the link in your email to verify your account and complete
+            signup.
           </p>
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-10"
+            className="mt-10 flex flex-col gap-3"
           >
             <Link
-              href="/legacy"
-              className="inline-flex h-14 items-center gap-2 rounded-md bg-accent px-8 text-base font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+              href="/login"
+              className="inline-flex h-14 items-center justify-center gap-2 rounded-md bg-accent px-8 text-base font-medium text-accent-foreground transition-colors hover:bg-accent/90"
             >
-              Enter the Legacy
+              Go to Sign In
               <ArrowRight className="h-4 w-4" />
             </Link>
+            <p className="text-xs text-muted-foreground">
+              Didn&apos;t receive it? Check your spam folder.
+            </p>
           </motion.div>
         </motion.div>
       </div>
@@ -311,7 +285,7 @@ export default function SignupPage() {
             transition={{ duration: 0.5 }}
             className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground"
           >
-            Join the Hammah Legacy
+            Join HAMMAH
           </motion.p>
 
           <motion.h1
@@ -331,6 +305,18 @@ export default function SignupPage() {
           >
             Create your Hammah account in two short steps.
           </motion.p>
+
+          {/* Global error */}
+          {pageState === "error" && globalError && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
+              role="alert"
+            >
+              {globalError}
+            </motion.div>
+          )}
 
           {/* Steps */}
           <div className="relative mt-10 overflow-hidden">
@@ -468,20 +454,6 @@ export default function SignupPage() {
                     Continue
                     <ArrowRight className="h-4 w-4" />
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignup}
-                    className="flex h-14 w-full items-center justify-center gap-3 rounded-md btn-engraved-secondary text-base font-medium"
-                  >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    Continue with Google
-                  </button>
                 </motion.form>
               )}
 
@@ -505,6 +477,37 @@ export default function SignupPage() {
                     Create your account.
                   </h2>
 
+                  {/* Birthday */}
+                  <div>
+                    <label
+                      htmlFor="signup-dob"
+                      className="mb-2 block text-sm font-medium text-foreground"
+                    >
+                      Birthday
+                    </label>
+                    <input
+                      id="signup-dob"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      autoComplete="bday"
+                      required
+                      className={`h-14 w-full rounded-md border bg-surface px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent ${
+                        errors.dateOfBirth ? "border-red-400" : "border-border"
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Your birthday matters to us. HAMMAH wants every Hamatee to
+                      feel remembered when their day comes around.
+                    </p>
+                    {errors.dateOfBirth && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400" role="alert">
+                        {errors.dateOfBirth}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Password */}
                   <div>
                     <label
@@ -521,7 +524,7 @@ export default function SignupPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete="new-password"
                         required
-                        placeholder="Create a password"
+                        placeholder="At least 8 characters"
                         className={`h-14 w-full rounded-md border bg-surface px-4 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent ${
                           errors.password ? "border-red-400" : "border-border"
                         }`}
@@ -597,16 +600,16 @@ export default function SignupPage() {
                   {/* Submit */}
                   <motion.button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={pageState === "loading"}
                     className="flex h-14 w-full items-center justify-center gap-2 rounded-md bg-accent text-base font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-60"
                     whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
                     whileTap={shouldReduceMotion ? {} : { scale: 0.99 }}
                   >
-                    {isLoading ? (
+                    {pageState === "loading" ? (
                       <span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground" />
                     ) : (
                       <>
-                        Join the Legacy
+                        Become a Hamatee
                         <ArrowRight className="h-4 w-4" />
                       </>
                     )}

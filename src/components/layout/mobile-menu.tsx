@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { X } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import {
@@ -11,10 +11,14 @@ import {
   categoryNavigation,
   utilityNavigation,
 } from "@/data/navigation";
+import type { User } from "@supabase/supabase-js";
 
 interface MobileMenuProps {
   open: boolean;
   onClose: () => void;
+  user: User | null;
+  displayName: string;
+  onLogout: () => void;
 }
 
 const themes = [
@@ -23,19 +27,23 @@ const themes = [
   { value: "dark", label: "Dark" },
 ] as const;
 
-export function MobileMenu({ open, onClose }: MobileMenuProps) {
+export function MobileMenu({
+  open,
+  onClose,
+  user,
+  displayName,
+  onLogout,
+}: MobileMenuProps) {
   const { theme, setTheme } = useTheme();
   const closeRef = useRef<HTMLButtonElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  // Focus trap: move focus to close button when menu opens
   useEffect(() => {
     if (open && closeRef.current) {
       closeRef.current.focus();
     }
   }, [open]);
 
-  // Escape closes
   useEffect(() => {
     if (!open) return;
     function handleEscape(e: KeyboardEvent) {
@@ -49,7 +57,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -60,7 +67,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
             aria-hidden="true"
           />
 
-          {/* Panel */}
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: "0%" }}
@@ -74,7 +80,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
             aria-modal="true"
             aria-label="Navigation menu"
           >
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-6 py-5">
               <BrandLogo variant="secondary" className="h-7 w-auto" />
               <button
@@ -89,7 +94,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
             </div>
 
             <nav className="flex-1 px-6 py-8" aria-label="Mobile navigation">
-              {/* Primary navigation */}
               <ul className="space-y-1">
                 {primaryNavigation.map((link, i) => (
                   <motion.li
@@ -116,7 +120,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
                 ))}
               </ul>
 
-              {/* The Hammah World */}
               <div className="mt-10">
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -183,7 +186,70 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
                 </ul>
               </div>
 
-              {/* Social */}
+              {/* Auth section */}
+              <div className="mt-6 border-t border-border pt-6">
+                {user ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.6 }}
+                  >
+                    <p className="mb-3 text-sm font-medium text-foreground">
+                      {displayName || "Hamatee"}
+                    </p>
+                    <div className="space-y-1">
+                      <Link
+                        href="/account"
+                        onClick={onClose}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+                      >
+                        My Account
+                      </Link>
+                      <Link
+                        href="/account/saved"
+                        onClick={onClose}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+                      >
+                        Saved Pieces
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onLogout();
+                          onClose();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.6 }}
+                    className="flex gap-3"
+                  >
+                    <Link
+                      href="/login"
+                      onClick={onClose}
+                      className="flex h-10 items-center rounded-md bg-accent px-5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={onClose}
+                      className="flex h-10 items-center rounded-md btn-engraved-secondary px-5 text-sm font-medium"
+                    >
+                      Join the Legacy
+                    </Link>
+                  </motion.div>
+                )}
+              </div>
+
               <div className="mt-6">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
                   Follow
@@ -194,7 +260,6 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
                 </div>
               </div>
 
-              {/* Appearance — theme selector */}
               <div className="mt-8 border-t border-border pt-6">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                   Appearance

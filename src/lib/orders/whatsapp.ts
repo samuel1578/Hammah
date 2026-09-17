@@ -23,9 +23,14 @@ export interface WhatsAppOrderDetails {
   size: string | null;
   quantity: number;
   customerName: string;
+  customerPhone: string;
+  customerEmail: string | null;
   deliveryRegion: string;
   deliveryCity: string;
+  deliveryArea: string | null;
+  deliveryLandmark: string | null;
   deliveryGps: string | null;
+  deliveryNotes: string | null;
 }
 
 export function buildWhatsAppMessage(details: WhatsAppOrderDetails): string {
@@ -47,25 +52,36 @@ export function buildWhatsAppMessage(details: WhatsAppOrderDetails): string {
   const siteUrl = getSiteUrl();
   if (siteUrl) {
     lines.push("");
+    lines.push("Product:");
     lines.push(`${siteUrl}/product/${details.productSlug}`);
   }
 
   lines.push("");
-  lines.push("Delivery:");
-
-  const deliveryParts = [details.deliveryRegion, details.deliveryCity].filter(
-    Boolean,
-  );
-  if (deliveryParts.length > 0) {
-    lines.push(deliveryParts.join(", "));
-  }
-
-  if (details.deliveryGps) {
-    lines.push(`Digital Address: ${details.deliveryGps}`);
+  lines.push("Customer:");
+  lines.push(`Name: ${details.customerName}`);
+  lines.push(`Phone: ${details.customerPhone}`);
+  if (details.customerEmail) {
+    lines.push(`Email: ${details.customerEmail}`);
   }
 
   lines.push("");
-  lines.push(`Name: ${details.customerName}`);
+  lines.push("Delivery:");
+  lines.push(`Region: ${details.deliveryRegion}`);
+  lines.push(`City / Town: ${details.deliveryCity}`);
+
+  if (details.deliveryArea) {
+    lines.push(`Area: ${details.deliveryArea}`);
+  }
+  if (details.deliveryLandmark) {
+    lines.push(`Landmark: ${details.deliveryLandmark}`);
+  }
+  if (details.deliveryGps) {
+    lines.push(`GhanaPost GPS: ${details.deliveryGps}`);
+  }
+  if (details.deliveryNotes) {
+    lines.push(`Delivery Notes: ${details.deliveryNotes}`);
+  }
+
   lines.push("");
   lines.push("I'd like to continue with this order.");
 

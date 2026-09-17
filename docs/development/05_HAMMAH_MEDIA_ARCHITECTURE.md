@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document, cross-referenced with `03_HAMMAH_DATA_MODEL.md` section B (media_assets, product_media).
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16)
+> **Last verified against repo:** September 17, 2026 (Sprint 0.19)
 
 ---
 
@@ -228,14 +228,15 @@ The same `media_assets` record can be referenced by multiple products. Examples:
 ### Upload
 - Drag-and-drop zone
 - File picker
-- Batch upload for 360° sets
+- Batch upload for images
 - Progress indicators
-- File type validation (JPEG, PNG, WebP for images; MP4 for video)
+- File type validation (JPEG, PNG, WebP for images; MP4, WebM for video)
+- Max file size: 10 MB (images), 50 MB (video)
 
 ### Management
 - Grid view with thumbnails, type badges, alt text, upload date
 - Search by alt text, file name
-- Filter by type (image/video/360), upload date
+- Filter by type (image/video), upload date
 - Detail view with preview, metadata, associated products/collections
 - Edit alt text, caption
 
@@ -250,64 +251,32 @@ The same `media_assets` record can be referenced by multiple products. Examples:
 
 ---
 
-## 10. Video — Future Direction
+## 10. Video — Implemented
 
-**Video is NOT currently functional.** The PDP has a Video tab that shows a placeholder message.
+**Video is now functional.** Products can have an optional video selected from the Media Library.
 
-### Approved Direction
+### Implementation
 
-- Products may have an optional video reference (FK to `media_assets`)
-- Single video per product (MVP)
-- Poster image: either the product's primary image or a dedicated poster asset
-- Storage: Cloudflare R2 (or Stream for transcoding)
-- Max duration: 60 seconds
-- Max file size: 100 MB
-- Format: MP4 (H.264)
+- `products.video_media_id` FK → `media_assets(id)` ON DELETE SET NULL (migration 00011)
+- `products.video_url` is derived from the selected asset's `public_url` (kept in sync by the API)
+- Admin selects video via Media Picker with `forceMediaType="video"` filter
+- PDP conditionally shows Photos | Video tabs based on `videoUrl`
+- `<video>` element with controls, playsInline, preload="metadata"
+- Upload supports MP4 and WebM up to 50 MB
 
-### Video Tab Visibility (Future)
+### Video Tab Visibility
 
-PDP should conditionally render tabs:
+PDP conditionally renders tabs:
 - Photos only → show "Photos" tab only (no tab bar)
 - Photos + Video → show "Photos | Video"
-- Photos + Video + 360 → show "Photos | Video | 360°"
 
 Do not show disabled/dead tabs without content.
 
 ---
 
-## 11. 360° — Future/Provisional Direction
+## 11. 360° — Removed
 
-**360° is NOT currently functional.** The PDP has a 360° tab that shows a placeholder message.
-
-### Approved Direction: Image Sequence
-
-An image-sequence 360° viewer (not GLB/Three.js) where:
-1. Photographer captures 24–36 frames around the product
-2. Dragging horizontally advances/reverses through frames
-3. All frames preloaded for instant response
-
-### Data Model
-
-Use `media_assets` with `set_id` grouping. A 360° set is a group of images with a known frame count and ordering. No dedicated 360 tables needed.
-
-### Frame Requirements (Provisional)
-
-| Attribute | Recommendation |
-|-----------|---------------|
-| Frame count | 24 frames (standard) or 36 (higher quality) |
-| Naming/ordering | Integer `frame_order` on each asset in the set |
-| Storage key | `products/{product_id}/360/{set_id}/frame-{NNN}.jpg` |
-| Dimensions | Consistent across all frames (e.g., 1200×1200) |
-| Preload | JavaScript preloads all frames before activating viewer |
-| Touch | Horizontal drag maps to frame index |
-| Mouse | Horizontal drag + scroll wheel |
-| Keyboard | Left/Right arrows |
-| Reduced motion | Static first frame, no auto-rotation |
-| Fallback | If frame count incomplete, show static primary image |
-
-### Important
-
-**Do NOT make the canonical schema depend heavily on 360° assumptions.** The current schema includes `has_360`, `set_360_id`, `set_id`, and `frame_order` fields, which are sufficient. The 360° workflow is provisional until actual assets and workflow are approved.
+360° functionality has been removed from the codebase. The `has_360` and `set_360_id` columns have been dropped from the `products` table. The `set_id` and `frame_order` columns remain on `media_assets` for potential future use but are not actively used.
 
 ---
 
@@ -320,7 +289,7 @@ Use `media_assets` with `set_id` grouping. A 360° set is a group of images with
 | `media-manifest.ts` (~55 slots) | Split: product → `product_media`; homepage → `homepage_*` tables; editorial → `media_assets` | Media manifest concept dissolves |
 | `home-editorial-hero.tsx` (4 URLs) | `homepage_hero_images` table | 4 Pixieset URLs become media_asset references |
 | `home-world.tsx` (3 categories) | `categories` table (cover_image_url) | Category data already exists |
-| Public video assets (`/herovideo.mp4`) | Cloudflare CDN | Move to Cloudflare storage |
+| Public video assets (`/herovideo.mp4`) | Cloudflare CDN via `media_assets` | Upload via Media Library, select via Media Picker |
 | `/dev/media` | Keep as dev tool | Add env-gating for production |
 
 ---

@@ -61,6 +61,7 @@ export interface CreateOrderRequest {
   variant_value?: string | null;
   quantity?: number;
   idempotency_key?: string | null;
+  date_of_birth?: string | null;
 }
 
 export interface CreateOrderResponse {

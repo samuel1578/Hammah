@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document.
 >
-> **Last verified against repo:** September 11, 2026 (updated Sprint 0.16)
+> **Last verified against repo:** September 16, 2026 (updated Sprint 0.19A)
 
 ---
 

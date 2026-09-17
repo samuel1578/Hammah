@@ -4,7 +4,7 @@
 >
 > **Canonical source of truth:** This document, cross-referenced with `02_HAMMAH_ARCHITECTURE.md`.
 >
-> **Last verified against repo:** September 11, 2026 (Sprint 0.17)
+> **Last verified against repo:** September 17, 2026 (Sprint 0.19)
 
 ---
 
@@ -17,7 +17,7 @@ These are the actual TypeScript types and fixtures in the codebase today.
 ```typescript
 type PricingMode = "PRICE_ON_REQUEST" | "FIXED";
 type Availability = "AVAILABLE" | "COMING_SOON" | "SOLD_OUT";
-type MediaMode = "photos" | "video" | "360";
+type MediaMode = "photos" | "video";
 
 interface ProductMedia {
   primary: string;    // Pixieset URL
@@ -28,6 +28,7 @@ interface ProductMedia {
 }
 
 interface Product {
+  dbId: string;            // UUID, actual DB primary key
   id: string;              // "design-01" (slug-like, same as slug)
   slug: string;            // "design-01" (same as id)
   name: string;            // "Design 01"
@@ -36,6 +37,8 @@ interface Product {
   pricingMode: PricingMode;
   availability: Availability;
   description: string;
+  videoUrl: string | null;
+  sizeGuideId: string | null;
   media: ProductMedia;
   variants: ProductVariant[];  // Per-product from Supabase (replaces global PRODUCT_SIZES)
 }
@@ -118,11 +121,27 @@ Category.route     → Collection slug (semantic collision)
 | `phone` | text | NULLABLE | — | |
 | `role` | text | NOT NULL | `'customer'` | CHECK IN ('customer', 'admin') |
 | `avatar_url` | text | NULLABLE | — | |
+| `date_of_birth` | date | NULLABLE | — | Birthday, Sprint 0.19B |
 | `created_at` | timestamptz | NOT NULL | `now()` | |
 | `updated_at` | timestamptz | NOT NULL | `now()` | |
 
 **Purpose:** User profile, linked 1:1 to Supabase auth.users.
-**RLS:** Users can read/update own profile. Admins can read all profiles.
+**Creation:** Automatic via `handle_new_user()` trigger on `auth.users` INSERT (Sprint 0.19A).
+**RLS:** Users can read/update own profile. Admins can read all profiles. Role changes restricted to admins via `prevent_role_escalation()` trigger.
+
+### Table: `saved_products`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
+| `user_id` | uuid | NOT NULL | — | FK → auth.users(id) ON DELETE CASCADE |
+| `product_id` | uuid | NOT NULL | — | FK → products(id) ON DELETE CASCADE |
+| `created_at` | timestamptz | NOT NULL | `now()` | |
+
+**Purpose:** Persistent Saved Pieces for authenticated Hamatee members.
+**Constraints:** UNIQUE (user_id, product_id) — one save per customer per product.
+**RLS:** Authenticated users can SELECT/INSERT/DELETE only their own rows.
+**Indexes:** `idx_saved_products_user_id`, `idx_saved_products_user_product`
 
 ### Table: `categories`
 
@@ -180,9 +199,9 @@ Category.route     → Collection slug (semantic collision)
 | `sort_order` | integer | NOT NULL | `0` | Within category |
 | `status` | text | NOT NULL | `'draft'` | CHECK IN ('draft', 'published', 'archived') |
 | `published_at` | timestamptz | NULLABLE | — | |
-| `video_url` | text | NULLABLE | — | FK concept → media_assets |
-| `has_360` | boolean | NOT NULL | `false` | Whether 360 set exists |
-| `set_360_id` | text | NULLABLE | — | Grouping key for 360 frames |
+| `video_url` | text | NULLABLE | — | Derived from `video_media_id` → media_assets |
+| `video_media_id` | uuid | NULLABLE | — | FK → media_assets(id) ON DELETE SET NULL |
+| `size_guide_id` | uuid | NULLABLE | — | FK → size_guides(id) ON DELETE SET NULL |
 | `created_at` | timestamptz | NOT NULL | `now()` | |
 | `updated_at` | timestamptz | NOT NULL | `now()` | |
 
@@ -257,6 +276,39 @@ Category.route     → Collection slug (semantic collision)
 
 **Purpose:** Product-media assignments with role and ordering.
 **RLS:** Public read for published products. Admin full CRUD.
+
+### Table: `size_guides`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
+| `name` | text | NOT NULL | — | Display name (e.g., "Trousers Size Guide") |
+| `description` | text | NULLABLE | — | Optional explanatory text |
+| `created_at` | timestamptz | NOT NULL | `now()` | |
+| `updated_at` | timestamptz | NOT NULL | `now()` | |
+
+**Purpose:** Named size guide templates. One guide can be assigned to multiple products.
+**RLS:** Public read. Admin full CRUD.
+
+### Table: `size_guide_rows`
+
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
+| `size_guide_id` | uuid | NOT NULL | — | FK → size_guides(id), ON DELETE CASCADE |
+| `size_label` | text | NOT NULL | — | e.g., "S", "M", "32" |
+| `waist_cm` | numeric | NULLABLE | — | |
+| `hip_cm` | numeric | NULLABLE | — | |
+| `length_cm` | numeric | NULLABLE | — | |
+| `chest_cm` | numeric | NULLABLE | — | |
+| `shoulder_cm` | numeric | NULLABLE | — | |
+| `footwear_uk` | numeric | NULLABLE | — | |
+| `footwear_eu` | numeric | NULLABLE | — | |
+| `sort_order` | integer | NOT NULL | `0` | Display order |
+| `created_at` | timestamptz | NOT NULL | `now()` | |
+
+**Purpose:** Individual measurement rows within a size guide. Columns are nullable — only relevant measurements are filled per guide type (e.g., trousers use waist/hip/length, footwear uses UK/EU).
+**RLS:** Public read. Admin full CRUD.
 
 ### Table: `homepage_featured_products`
 
@@ -442,18 +494,31 @@ Used by the `create_order` RPC function to generate unique order numbers in the 
 
 ### Function: `create_order` (RPC)
 
-Atomic function that validates product/variant, generates order number, creates order + order items in a single transaction. Used by `POST /api/orders`.
+Atomic function that validates product/variant, generates order number, creates order + order items in a single transaction. Accepts optional `p_user_id` and `p_source` parameters for authenticated orders. Used by `POST /api/orders`.
 
-### Provisional: 360° Media
+### Table: `hamatee_enrolments`
 
-360° is FUTURE/PROVISIONAL. The current schema includes `has_360` and `set_360_id` on products, plus `set_id` and `frame_order` on `media_assets`. This is sufficient for the future image-sequence approach without dedicated 360 tables.
+**Purpose:** Stores enrolment intent from guest orders with birthday. One enrolment per order maximum. Enrolment failure never rolls back the order.
 
-**Do NOT make the canonical schema depend heavily on:**
-- `has_360`
-- `set_360_id`
-- Fixed 24/36-frame assumptions
+| Column | Type | Nullable | Default | Notes |
+|--------|------|----------|---------|-------|
+| `id` | uuid | NOT NULL | `gen_random_uuid()` | PK |
+| `order_id` | uuid | NOT NULL | — | FK → orders(id), ON DELETE CASCADE, UNIQUE |
+| `email` | text | NOT NULL | — | Lowercased, trimmed |
+| `first_name` | text | NULLABLE | — | |
+| `last_name` | text | NULLABLE | — | |
+| `phone` | text | NULLABLE | — | |
+| `date_of_birth` | date | NOT NULL | — | |
+| `status` | text | NOT NULL | `'pending'` | CHECK: pending/invited/activated/existing_account/failed/cancelled |
+| `activated_user_id` | uuid | NULLABLE | — | FK → auth.users(id), ON DELETE SET NULL |
+| `created_at` | timestamptz | NOT NULL | `now()` | |
+| `updated_at` | timestamptz | NOT NULL | `now()` | |
+| `activated_at` | timestamptz | NULLABLE | — | |
+| `last_error` | text | NULLABLE | — | |
 
-Document the intended future direction, but mark it provisional until actual 360 assets/workflow are approved.
+### Function: `create_hamatee_enrolment` (RPC)
+
+SECURITY DEFINER function that inserts an enrolment record. Detects existing Auth users by email (sets `status = 'existing_account'`). Idempotent via `ON CONFLICT (order_id)`.
 
 ---
 
@@ -472,6 +537,8 @@ products ← product_media.product_id (CASCADE)
 products ← collection_products.product_id (CASCADE)
 products ← saved_products.product_id (CASCADE)
 products ← order_items.product_id (no cascade — preserve references)
+products ← size_guides (via size_guide_id, nullable)
+products ← media_assets (via video_media_id, nullable, SET NULL)
 
 collections ← collection_products.collection_id (CASCADE)
 collections ← homepage_collection_feature.collection_id
@@ -479,7 +546,12 @@ collections ← homepage_collection_feature.collection_id
 media_assets ← product_media.media_asset_id (CASCADE)
 media_assets ← homepage_hero_images.media_asset_id (CASCADE)
 
+size_guides ← size_guide_rows.size_guide_id (CASCADE)
+size_guides ← products.size_guide_id (SET NULL)
+
 orders ← order_items.order_id (CASCADE)
+orders ← hamatee_enrolments.order_id (CASCADE)
+auth.users ← hamatee_enrolments.activated_user_id (SET NULL)
 ```
 
 ---

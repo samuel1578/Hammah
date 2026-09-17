@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { User, Heart, Menu, Search } from "lucide-react";
+import { User, Heart, Menu } from "lucide-react";
 import { ThemeMenu } from "@/components/theme/theme-menu";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { primaryNavigation } from "@/data/navigation";
+import { createClient } from "@/lib/supabase/client";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/" || pathname === "";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [displayName, setDisplayName] = useState<string>("");
 
   const handleScroll = useCallback(() => {
     setScrolled(window.scrollY > 40);
@@ -32,6 +37,38 @@ export function SiteHeader() {
     }
     return () => document.body.classList.remove("menu-open");
   }, [mobileOpen]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user?.user_metadata?.first_name) {
+        setDisplayName(user.user_metadata.first_name);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser?.user_metadata?.first_name) {
+          setDisplayName(currentUser.user_metadata.first_name);
+        } else {
+          setDisplayName("");
+        }
+      },
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   const isSolid = !isHome || scrolled;
 
@@ -83,16 +120,6 @@ export function SiteHeader() {
 
           {/* Utility actions — desktop */}
           <div className="hidden items-center gap-1 lg:flex">
-            {/* Search — placeholder until backend search is implemented */}
-            <button
-              type="button"
-              disabled
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/40 cursor-not-allowed"
-              aria-label="Search (coming soon)"
-              title="Search coming soon"
-            >
-              <Search className="h-4 w-4" />
-            </button>
             <Link
               href="/saved"
               className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70 transition-colors hover:text-foreground"
@@ -100,26 +127,33 @@ export function SiteHeader() {
             >
               <Heart className="h-4 w-4" />
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70 transition-colors hover:text-foreground"
-              aria-label="Account"
-            >
-              <User className="h-4 w-4" />
-            </Link>
+
+            {user ? (
+              <Link
+                href="/account"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
+                aria-label="My account"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden xl:inline">
+                  {displayName || "Account"}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70 transition-colors hover:text-foreground"
+                aria-label="Account"
+              >
+                <User className="h-4 w-4" />
+              </Link>
+            )}
+
             <ThemeMenu />
           </div>
 
           {/* Mobile utility */}
           <div className="flex items-center gap-1 lg:hidden">
-            <button
-              type="button"
-              disabled
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/40 cursor-not-allowed"
-              aria-label="Search (coming soon)"
-            >
-              <Search className="h-4 w-4" />
-            </button>
             <Link
               href="/saved"
               className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70"
@@ -127,19 +161,36 @@ export function SiteHeader() {
             >
               <Heart className="h-4 w-4" />
             </Link>
-            <Link
-              href="/login"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70"
-              aria-label="Account"
-            >
-              <User className="h-4 w-4" />
-            </Link>
+
+            {user ? (
+              <Link
+                href="/account"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70"
+                aria-label="My account"
+              >
+                <User className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/70"
+                aria-label="Account"
+              >
+                <User className="h-4 w-4" />
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
       {/* Mobile menu */}
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        user={user}
+        displayName={displayName}
+        onLogout={handleLogout}
+      />
     </>
   );
 }
