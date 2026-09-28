@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | SL by Hammah",
   },
   description: "Premium African fashion from SL by Hammah.",
-  metadataBase: new URL("https://slbyhammah.com"),
+  metadataBase: new URL("https://www.hammah.store"),
   icons: {
     icon: "/images/hammah/global/logo/favicon.png",
   },
