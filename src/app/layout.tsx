@@ -1,37 +1,34 @@
 import type { Metadata } from "next";
 import { fontVariables } from "@/styles/fonts";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { OG_IMAGE, OG_IMAGE_PATH, SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN, SITE_TITLE } from "@/lib/seo/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_ORIGIN),
   title: {
-    default: "SL by Hammah",
-    template: "%s | SL by Hammah",
+    default: SITE_TITLE,
+    template: "%s | SL by HAMMAH",
   },
-  description: "Premium African fashion from SL by Hammah.",
-  metadataBase: new URL("https://www.hammah.store"),
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   icons: {
     icon: "/images/hammah/global/logo/favicon.png",
   },
   openGraph: {
-    title: "SL by Hammah",
-    description: "Premium African fashion from SL by Hammah.",
-    images: [
-      {
-        url: "/images/hammah/global/logo/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "SL by Hammah",
-      },
-    ],
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_ORIGIN,
+    siteName: SITE_NAME,
+    locale: "en_GB",
     type: "website",
-    siteName: "SL by Hammah",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SL by Hammah",
-    description: "Premium African fashion from SL by Hammah.",
-    images: ["/images/hammah/global/logo/og-image.png"],
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
   },
 };
 

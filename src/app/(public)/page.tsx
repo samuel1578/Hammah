@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getHomepageFeaturedProducts } from "@/lib/catalogue";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import type { Product } from "@/types/products";
@@ -12,6 +13,36 @@ import { HomeFaq } from "@/components/home/home-faq";
 import { HomeClosing } from "@/components/home/home-closing";
 import { PublicCTA } from "@/components/ui/public-cta";
 import { Container } from "@/components/ui/container";
+import {
+  OG_IMAGE,
+  OG_IMAGE_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_ORIGIN,
+  SITE_TITLE,
+  absoluteUrl,
+} from "@/lib/seo/site";
+
+export const metadata: Metadata = {
+  title: { absolute: SITE_TITLE },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: absoluteUrl("/") },
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_ORIGIN,
+    siteName: SITE_NAME,
+    locale: "en_GB",
+    type: "website",
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
+  },
+};
 
 function toLegacyProducts(items: CatalogueProduct[]): Product[] {
   return items.map((p) => ({

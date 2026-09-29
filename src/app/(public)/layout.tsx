@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 
 export default function PublicLayout({
   children,
@@ -8,7 +9,10 @@ export default function PublicLayout({
 }) {
   return (
     <>
+      <OrganizationJsonLd />
+      <WebSiteJsonLd />
       <SiteHeader />
+
       {/* Header is fixed h-16, so we need a spacer */}
       <div className="h-16" aria-hidden="true" />
       <main id="main-content" className="flex-1">

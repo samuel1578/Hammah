@@ -1,11 +1,13 @@
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AccountNav } from "@/components/account/account-nav";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Container } from "@/components/ui/container";
 
-export const metadata = {
-  title: "My Account | SL by Hammah",
+export const metadata: Metadata = {
+  title: "My Account",
+  robots: { index: false, follow: false },
 };
 
 export default async function AccountLayout({
@@ -43,7 +45,7 @@ export default async function AccountLayout({
           <aside className="md:sticky md:top-24 md:self-start">
             <AccountNav />
           </aside>
-          <main id="main-content">{children}</main>
+          <div>{children}</div>
         </div>
       </Container>
     </section>

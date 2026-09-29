@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { CatalogueProduct, CatalogueCollection, CatalogueCategory } from "./types";
 
@@ -24,7 +25,9 @@ export async function getPublishedProducts(): Promise<CatalogueProduct[]> {
   return products.map((p: any) => mapProduct(p));
 }
 
-export async function getPublishedProductBySlug(slug: string): Promise<CatalogueProduct | null> {
+export const getPublishedProductBySlug = cache(async function getPublishedProductBySlug(
+  slug: string,
+): Promise<CatalogueProduct | null> {
   const supabase = await createClient();
 
   const { data: product, error } = await supabase
@@ -46,7 +49,7 @@ export async function getPublishedProductBySlug(slug: string): Promise<Catalogue
   if (error || !product) return null;
 
   return mapProduct(product);
-}
+});
 
 export async function getRelatedProducts(currentSlug: string, count = 4): Promise<CatalogueProduct[]> {
   const supabase = await createClient();
@@ -93,7 +96,9 @@ export async function getPublishedCollections(): Promise<CatalogueCollection[]> 
   }));
 }
 
-export async function getPublishedCollectionBySlug(slug: string): Promise<CatalogueCollection | null> {
+export const getPublishedCollectionBySlug = cache(async function getPublishedCollectionBySlug(
+  slug: string,
+): Promise<CatalogueCollection | null> {
   const supabase = await createClient();
 
   const { data: collection, error } = await supabase
@@ -112,7 +117,7 @@ export async function getPublishedCollectionBySlug(slug: string): Promise<Catalo
     description: collection.description ?? undefined,
     sortOrder: collection.sort_order,
   };
-}
+});
 
 export async function getCollectionProducts(collectionSlug: string): Promise<CatalogueProduct[]> {
   const supabase = await createClient();
@@ -263,4 +268,41 @@ function mapProduct(row: any): CatalogueProduct {
       available: v.available,
     })),
   };
+}
+
+export interface SitemapEntry {
+  slug: string;
+  updatedAt: string;
+}
+
+export async function getPublishedProductSitemapEntries(): Promise<SitemapEntry[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("slug, updated_at")
+    .eq("status", "published")
+    .order("sort_order");
+
+  if (error || !data) return [];
+
+  return (data as { slug: string; updated_at: string }[])
+    .filter((row) => row.slug && row.updated_at)
+    .map((row) => ({ slug: row.slug, updatedAt: row.updated_at }));
+}
+
+export async function getPublishedCollectionSitemapEntries(): Promise<SitemapEntry[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("collections")
+    .select("slug, updated_at")
+    .eq("status", "published")
+    .order("sort_order");
+
+  if (error || !data) return [];
+
+  return (data as { slug: string; updated_at: string }[])
+    .filter((row) => row.slug && row.updated_at)
+    .map((row) => ({ slug: row.slug, updatedAt: row.updated_at }));
 }

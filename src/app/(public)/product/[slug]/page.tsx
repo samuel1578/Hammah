@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedProductBySlug, getRelatedProducts } from "@/lib/catalogue";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import { PdpClient } from "@/components/product/pdp-client";
 import type { Product } from "@/types/products";
+import { BreadcrumbListJsonLd, ProductJsonLd } from "@/components/seo/json-ld";
+import { OG_IMAGE, OG_IMAGE_PATH, SITE_NAME, absoluteUrl } from "@/lib/seo/site";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -26,13 +29,53 @@ function toLegacyProduct(p: CatalogueProduct): Product {
   };
 }
 
-export async function generateMetadata({ params }: ProductPageProps) {
+function productDescription(name: string, description?: string) {
+  const trimmed = description?.trim();
+  if (trimmed) return trimmed;
+  return `Discover ${name} by SL by HAMMAH — part of our contemporary African fashion collection.`;
+}
+
+function productImage(product: CatalogueProduct) {
+  const primary = product.media.primary?.trim();
+  if (primary) return primary;
+  const first = product.media.gallery.find((image) => image?.trim());
+  return first || undefined;
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await getPublishedProductBySlug(slug);
-  if (!product) return { title: "Product Not Found" };
+  if (!product) {
+    return {
+      title: "Product Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const description = productDescription(product.name, product.description);
+  const url = absoluteUrl(`/product/${slug}`);
+  const title = `${product.name} | SL by HAMMAH`;
+  const image = productImage(product);
+
   return {
-    title: `${product.name} | SL by Hammah`,
-    description: product.description,
+    title: product.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      locale: "en_GB",
+      type: "website",
+      ...(image ? { images: [{ url: image, alt: `${product.name} by SL by HAMMAH` }] } : { images: [OG_IMAGE] }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image ?? OG_IMAGE_PATH],
+    },
   };
 }
 
@@ -48,7 +91,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const description = productDescription(product.name, product.description);
+  const url = absoluteUrl(`/product/${slug}`);
+  const image = productImage(product);
+
   const related = relatedRaw.map(toLegacyProduct);
 
-  return <PdpClient product={toLegacyProduct(product)} relatedProducts={related} />;
+  return (
+    <>
+      <ProductJsonLd
+        name={product.name}
+        description={description}
+        url={url}
+        image={image ?? absoluteUrl(OG_IMAGE_PATH)}
+        category={product.category.name || undefined}
+      />
+      <BreadcrumbListJsonLd
+        items={[
+          { name: "Home", item: absoluteUrl("/") },
+          { name: "Shop", item: absoluteUrl("/shop") },
+          { name: product.name },
+        ]}
+      />
+      <PdpClient product={toLegacyProduct(product)} relatedProducts={related} />
+    </>
+  );
 }

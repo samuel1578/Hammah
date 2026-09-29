@@ -1,3 +1,4 @@
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -5,8 +6,9 @@ import { Container } from "@/components/ui/container";
 import { TextReveal } from "@/components/motion/text-reveal";
 import { Reveal } from "@/components/motion/reveal";
 
-export const metadata = {
-  title: "Saved Pieces | SL by Hammah",
+export const metadata: Metadata = {
+  title: "Saved Pieces",
+  robots: { index: false, follow: false },
 };
 
 export default async function SavedPage() {

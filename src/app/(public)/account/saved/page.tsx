@@ -1,10 +1,12 @@
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Container } from "@/components/ui/container";
 import { SavedPieceCard } from "@/components/account/saved-piece-card";
 
-export const metadata = {
-  title: "Saved Pieces | SL by Hammah",
+export const metadata: Metadata = {
+  title: "Saved Pieces",
+  robots: { index: false, follow: false },
 };
 
 export default async function AccountSavedPage() {

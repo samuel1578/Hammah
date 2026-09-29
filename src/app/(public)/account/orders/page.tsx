@@ -1,9 +1,11 @@
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Package } from "lucide-react";
 
-export const metadata = {
-  title: "Orders | SL by Hammah",
+export const metadata: Metadata = {
+  title: "Orders",
+  robots: { index: false, follow: false },
 };
 
 export default async function AccountOrdersPage() {

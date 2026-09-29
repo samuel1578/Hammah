@@ -12,6 +12,7 @@ interface EditorialBreakProps {
   body?: string;
   media?: MediaSlot;
   logo?: ReactNode;
+  headingLevel?: 1 | 2 | 3;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export function EditorialBreak({
   body,
   media,
   logo,
+  headingLevel = 2,
   className = "",
 }: EditorialBreakProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -55,7 +57,7 @@ export function EditorialBreak({
 
           <div className="flex flex-col justify-center">
             <TextReveal
-              as="p"
+              as={`h${headingLevel}` as keyof React.JSX.IntrinsicElements}
               className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl md:text-5xl"
             >
               {heading}
