@@ -56,7 +56,7 @@ export function CollectionsClient({ collections }: CollectionsClientProps) {
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 md:items-center">
               <MediaReveal className="aspect-[4/5]">
                 <img
-                  src="/images/hammah/home/categories/trousers.jpg"
+                  src="https://pub-e17ec1261dbd4a33801a1d43f8f92421.r2.dev/uploads/8d6ff997-ab31-4c19-af5e-b3f3186b4a93-imgi-121-1e803aa400aa0228cab980a960306298-large.jpg"
                   alt="Collection 001 — African-print trousers"
                   className="h-full w-full object-cover"
                 />

@@ -35,7 +35,7 @@ export function ProductInfoPanel({
         {/* Title */}
         <Reveal delay={0.1}>
           <div>
-            <h1 className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl">
+            <h1 className="font-ribeye text-3xl tracking-tight text-foreground sm:text-4xl">
               {product.name}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -46,7 +46,7 @@ export function ProductInfoPanel({
 
         {/* Price + Availability */}
         <Reveal delay={0.15}>
-          <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <ProductPrice
               pricingMode={product.pricingMode}
               priceAmount={product.priceAmount}

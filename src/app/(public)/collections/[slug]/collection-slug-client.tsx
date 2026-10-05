@@ -4,8 +4,10 @@ import Link from "next/link";
 import type { Product } from "@/types/products";
 import { CollectionHero } from "@/components/editorial/collection-hero";
 import { ProductCard } from "@/components/product/product-card";
+import { ProductCardPrice } from "@/components/product/product-card-price";
 import { Reveal } from "@/components/motion/reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
+import { GlitchText } from "@/components/editorial/glitch-text";
 import { MediaReveal } from "@/components/motion/media-reveal";
 import { Stagger, staggerItemVariants } from "@/components/motion/stagger";
 import { motion } from "motion/react";
@@ -26,6 +28,7 @@ export function CollectionSlugClient({ collection, products }: CollectionSlugCli
         heading={collection.name}
         subheading="The opening collection."
         body={collection.description ?? `${collection.name} — SL by Hammah.`}
+        showLogo
       />
 
       {hasProducts ? (
@@ -34,30 +37,35 @@ export function CollectionSlugClient({ collection, products }: CollectionSlugCli
           <section className="py-16 md:py-24" aria-labelledby="featured-heading">
             <Container>
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 md:items-center">
-                <div>
-                  <TextReveal
+                <div className="text-center">
+                  <GlitchText
                     as="h2"
                     id="featured-heading"
-                    className="font-serif italic text-3xl tracking-tight text-foreground sm:text-4xl"
+                    className="font-ribeye text-3xl tracking-tight text-foreground sm:text-4xl"
                   >
                     {products[0].name}
-                  </TextReveal>
+                  </GlitchText>
                   <Reveal delay={0.1} y={12}>
-                    <p className="mt-3 text-muted-foreground">
+                    <p className="mt-3 text-base text-muted-foreground capitalize md:text-lg">
                       {collection.name} · {products[0].category}
                     </p>
                   </Reveal>
                   <Reveal delay={0.15} y={12}>
-                    <p className="mt-1 text-sm text-muted-foreground">Price on request</p>
+                    <ProductCardPrice
+                      pricingMode={products[0].pricingMode}
+                      priceAmount={products[0].priceAmount}
+                      currency={products[0].currency}
+                      priceClassName="md:text-2xl"
+                    />
                   </Reveal>
                   <Reveal delay={0.2} y={12}>
-                    <p className="mt-1 text-xs text-accent">Available</p>
+                    <p className="mt-1 text-xs text-accent md:text-sm">Available</p>
                   </Reveal>
                   <Reveal delay={0.25} y={12}>
                     <div className="mt-6">
                       <Link
                         href={`/product/${products[0].slug}`}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-accent group"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-accent group md:text-base"
                       >
                         View product
                         <span className="transition-transform group-hover:translate-x-1">→</span>

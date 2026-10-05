@@ -55,7 +55,7 @@ export function SavedPieceCard({ item }: { item: SavedPieceItem }) {
         <div>
           <Link
             href={`/product/${item.slug}`}
-            className="text-sm font-medium text-foreground transition-colors hover:text-accent"
+            className="font-ribeye text-[15px] text-foreground transition-colors hover:text-accent"
           >
             {item.name}
           </Link>

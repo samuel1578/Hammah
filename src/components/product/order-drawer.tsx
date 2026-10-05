@@ -518,7 +518,7 @@ export function OrderDrawer({
                         />
                       </div>
                       <div className="space-y-0.5">
-                        <p className="text-sm font-medium text-foreground">
+                        <p className="font-ribeye text-[15px] text-foreground">
                           {product.name}
                         </p>
                         <p className="text-xs text-muted-foreground">

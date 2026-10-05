@@ -5,6 +5,7 @@ import { getMediaBySection } from "@/data/media-manifest";
 import { Reveal } from "@/components/motion/reveal";
 import { MediaReveal } from "@/components/motion/media-reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
+import { GlitchText } from "@/components/editorial/glitch-text";
 import { Container } from "@/components/ui/container";
 
 const worldCategories = [
@@ -85,17 +86,21 @@ export function HomeHammahWorld() {
                 {/* Label */}
                 <div className="absolute bottom-0 left-0 p-6 md:p-8">
                   <Reveal delay={cat.dominant ? 0 : 0.1}>
-                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground/80">
+                    <p className="inline-block rounded-full bg-surface/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-foreground backdrop-blur-sm">
                       {cat.status}
                     </p>
                   </Reveal>
                   <Reveal delay={cat.dominant ? 0.1 : 0.15}>
-                    <h3 className="mt-1 type-statement text-foreground">
+                    <GlitchText
+                      as="h3"
+                      variant="mild"
+                      className="mt-1 type-statement text-foreground"
+                    >
                       {cat.label}
-                    </h3>
+                    </GlitchText>
                   </Reveal>
                   <Reveal delay={cat.dominant ? 0.15 : 0.2}>
-                    <span className="mt-3 inline-flex items-center gap-1 text-sm text-foreground/80 transition-colors group-hover:text-foreground">
+                    <span className="mt-3 inline-flex items-center gap-2 rounded-md btn-engraved-mix px-4 py-2 text-xs font-semibold uppercase tracking-[0.15em]">
                       Explore
                       <span className="transition-transform group-hover:translate-x-1">
                         →

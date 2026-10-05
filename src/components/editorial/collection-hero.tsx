@@ -2,8 +2,9 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import type { MediaSlot } from "@/data/media-manifest";
-import { TextReveal } from "@/components/motion/text-reveal";
 import { Reveal } from "@/components/motion/reveal";
+import { GlitchText } from "@/components/editorial/glitch-text";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 interface CollectionHeroProps {
   heading: string;
@@ -24,6 +25,8 @@ interface CollectionHeroProps {
   headingColor?: string;
   /** Override body text colour */
   bodyColor?: string;
+  /** Show theme-aware brand logo top-left: secondary mark on desktop, primary lockup on mobile */
+  showLogo?: boolean;
 }
 
 function HeroImage({
@@ -57,13 +60,14 @@ export function CollectionHero({
   overlay,
   headingColor,
   bodyColor,
+  showLogo = false,
 }: CollectionHeroProps) {
   const shouldReduceMotion = useReducedMotion();
   const hasBackground = !!(media || desktopMedia || mobileMedia);
 
   return (
     <section
-      className={`relative flex h-[70svh] min-h-[480px] items-end overflow-hidden pb-16 md:items-center md:pb-0 ${className}`}
+      className={`relative flex h-[50svh] min-h-[400px] items-end overflow-hidden pb-16 md:h-[70svh] md:min-h-[480px] md:items-center md:pb-0 ${className}`}
       aria-labelledby="collection-hero-heading"
     >
       {/* Background */}
@@ -112,6 +116,25 @@ export function CollectionHero({
         </div>
       )}
 
+      {/* Brand logo — desktop secondary mark, mobile primary lockup */}
+      {showLogo && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: shouldReduceMotion ? 0 : 0.2 }}
+          className="absolute top-24 left-5 z-10 sm:left-6 md:left-auto md:right-5 lg:right-8"
+        >
+          <BrandLogo
+            variant="secondary"
+            className="hidden md:block md:h-[300px] lg:h-[360px] w-auto"
+          />
+          <BrandLogo
+            variant="primary"
+            className="md:hidden h-8 sm:h-9 w-auto"
+          />
+        </motion.div>
+      )}
+
       {/* Content */}
       <div className={`relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${contentClassName}`}>
         <div className="max-w-2xl">
@@ -130,14 +153,14 @@ export function CollectionHero({
             </Reveal>
           )}
 
-          <TextReveal
+          <GlitchText
             as="h1"
             id="collection-hero-heading"
             className="type-hero"
             style={{ color: headingColor || undefined }}
           >
             {heading}
-          </TextReveal>
+          </GlitchText>
 
           {body && (
             <Reveal delay={0.3} y={12}>

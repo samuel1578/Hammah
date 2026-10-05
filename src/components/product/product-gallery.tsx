@@ -9,14 +9,32 @@ interface ProductGalleryProps {
   alt: string;
 }
 
+/** Milliseconds each image stays visible before auto-advancing. */
+const AUTO_ADVANCE_MS = 2500;
+
 export function ProductGallery({ images, alt }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  /** Once the user picks a thumbnail, auto-flow stops for good. */
+  const [userEngaged, setUserEngaged] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   const allImages = images;
   const currentImage = allImages[activeIndex];
+
+  /* Auto-flow: play the queue from first to last on landing, then stop. */
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    if (lightboxOpen) return;
+    if (userEngaged) return;
+    if (allImages.length < 2) return;
+    if (activeIndex >= allImages.length - 1) return;
+    const id = setTimeout(() => {
+      setActiveIndex((prev) => Math.min(prev + 1, allImages.length - 1));
+    }, AUTO_ADVANCE_MS);
+    return () => clearTimeout(id);
+  }, [activeIndex, shouldReduceMotion, lightboxOpen, userEngaged, allImages.length]);
 
   const openLightbox = useCallback(
     (index: number) => {
@@ -82,7 +100,10 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
             <button
               key={i}
               type="button"
-              onClick={() => setActiveIndex(i)}
+              onClick={() => {
+                setUserEngaged(true);
+                setActiveIndex(i);
+              }}
               className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded transition-all ${
                 i === activeIndex
                   ? "ring-2 ring-accent ring-offset-2 ring-offset-background"

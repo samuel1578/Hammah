@@ -1673,3 +1673,168 @@ Make Google Search, Google Search Console, Bing, and browsers consistently recog
 - Google has **not** been shown to refresh the favicon yet — the Search Console property icon may update only after Google recrawls
 
 ### Mini Fix — Favicon Search Icon Status: COMPLETE
+
+---
+
+## October 5, 2026
+
+- **Date:** October 5, 2026
+- **Status:** ✅ Complete
+- **Objective:** Fix three confirmed defects — fixed prices not rendering on the storefront, Admin hover images not switching on desktop, and order history dividing price snapshots by 100
+- **Investigation:** `HAMMAH_PRODUCT_PRICE_AND_HOVER_MEDIA_INVESTIGATION.md` (read-only trace of both defects before implementation)
+
+### Root Causes Confirmed
+
+| Issue | Root cause | Layer |
+|-------|-----------|-------|
+| Fixed price not rendering | Public catalogue queries selected `pricing_mode` but omitted `price_amount`/`currency`; mapper and types had no price field; `ProductPrice` rendered `"—"` for `FIXED` | Query + Mapper/type + Rendering |
+| Hover image not switching | `product-card.tsx` branched on `isMobileCard = mobile.length > 1`, so any product with hover/gallery images rendered the Swiper on desktop and the crossfade pair never mounted | Rendering/Interaction |
+| Order history wrong price | `account/orders/[id]/page.tsx` rendered `price_amount_snapshot / 100` (`300` → `GHS 3.00`) while Admin stores whole GHS | Display conversion |
+
+### Fixed Price
+
+- **Queries changed:** `price_amount, currency` added to all six public product selects in `src/lib/catalogue/queries.ts` (lines 11, 36, 60, 130, 178, 204) — `getPublishedProducts`, `getPublishedProductBySlug`, `getRelatedProducts`, `getCollectionProducts`, `getProductsByCategorySlug`, `getHomepageFeaturedProducts`. No duplicate queries created
+- **Mapper:** `mapProduct()` now emits `priceAmount: row.price_amount ?? null` and `currency: row.currency ?? "GHS"`
+- **Types:** `CatalogueProduct` gained required `priceAmount`/`currency`; legacy `Product` gained optional `priceAmount?`/`currency?` (optional only so the untouched `src/data/products.ts` fixture still compiles)
+- **Converters:** all four now propagate both fields — `(public)/page.tsx`, `shop/page.tsx`, `collections/[slug]/page.tsx`, `product/[slug]/page.tsx`
+- **ProductPrice:** `PRICE_ON_REQUEST` → "Price on request" (unchanged); `FIXED` + amount → `GHS 300.00`; `FIXED` + null amount → "Price unavailable" (no crash, no fake zero)
+- **Surfaces receiving price:** Homepage cards, Shop cards, Collection-detail cards, Related Pieces cards, PDP — all via the single shared `ProductPrice`
+
+### Hover Media
+
+- **Bug:** image count decided desktop vs mobile branching
+- **Fix:** both layouts always mount; existing responsive architecture gates them — desktop crossfade wrapper `hidden md:block`, Swiper `md:hidden`. `isMobileCard` removed
+- **Behaviour:** desktop hover/focus → `product.media.hover` crossfade in, mouse leave/blur → primary returns; keyboard `onFocus`/`onBlur` preserved; products without hover stay on primary; mobile Swiper swipe behaviour fully preserved; no gallery fallback used as desktop hover source
+
+### Order Price Units
+
+- Removed the `/100` conversion; order history now calls the same `formatPrice()` as the storefront → `GHS 300.00`
+- Repo-wide grep confirms zero remaining `/ 100` price conversions
+- Order RPC, `order_items` schema, and snapshot columns untouched — no migration
+
+### SEO
+
+- `ProductJsonLd` now emits conditional `offers` only when `pricingMode === "FIXED" && priceAmount != null && currency` (`price: "300.00"`, `priceCurrency: "GHS"`, availability mapped `AVAILABLE→InStock`, `COMING_SOON→PreOrder`, `SOLD_OUT→OutOfStock`). `PRICE_ON_REQUEST` continues to omit offers; no zero price fabricated
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/currency.ts` | Single shared price formatter — `formatPrice(300, "GHS")` → `GHS 300.00`; whole-GHS convention, no major/minor unit conversion |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/lib/catalogue/queries.ts` | 6 selects + mapper expose `price_amount`/`currency` |
+| `src/lib/catalogue/types.ts` | `CatalogueProduct.priceAmount` / `.currency` |
+| `src/types/products.ts` | `Product.priceAmount?` / `.currency?` |
+| `src/app/(public)/page.tsx` | Converter propagates price fields |
+| `src/app/(public)/shop/page.tsx` | Converter propagates price fields |
+| `src/app/(public)/collections/[slug]/page.tsx` | Converter propagates price fields |
+| `src/app/(public)/product/[slug]/page.tsx` | Converter propagates price fields + JSON-LD price props |
+| `src/app/(public)/account/orders/[id]/page.tsx` | `/100` removed, uses `formatPrice()` |
+| `src/components/product/product-price.tsx` | Fixed-price rendering + null-safe fallback |
+| `src/components/product/product-card.tsx` | Price props + responsive desktop/mobile branching fix |
+| `src/components/product/product-info-panel.tsx` | Passes price props to PDP |
+| `src/components/seo/json-ld.tsx` | Conditional Product Offer JSON-LD |
+
+### Not Changed (by design)
+
+- `src/data/products.ts`, `src/data/collections.ts` (no fixture/seed updates)
+- Admin pricing form and Admin media assignment (already correct)
+- Product/product-media schema, migrations, `create_order` RPC, order_items snapshots
+- Idempotency, Hamatee/guest ordering, WhatsApp, Saved Pieces, auth, R2, collections architecture, unrelated SEO metadata
+
+### Architecture Confirmation
+
+**Admin → Supabase → storefront** now works for both flows with no product-specific code, no fixture/seed edit, no hardcoded slug, no second Admin step, no per-garment configuration:
+- Admin sets Fixed Price `300` → Save → cards/PDP render `GHS 300.00`
+- Admin assigns hover image → Save → `product_media.role = hover` → desktop card swaps images on hover
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean (0 errors) |
+| `npm run build` | ✅ Succeeds, 50 pages |
+| `npm run lint` | ⚠️ 266 problems (114 errors, 152 warnings) — **0 new findings in changed files**; the 29 findings inside changed files are pre-existing (`no-explicit-any` in `queries.ts`/orders page, `no-img-element` warnings), only line-shifted |
+
+### Status — Product Pricing + Hover Media Fix: COMPLETE
+
+---
+
+## October 5, 2026 — Price Treatment UI Exploration (Options 2 + 3), Ribeye Typography + Gallery Auto-Flow
+
+- **Date:** October 5, 2026
+- **Status:** ✅ Complete
+- **Objective:** Implement the approved Product Price Treatment Exploration concepts across the storefront — Option 3 (Editorial Price Card) on all product cards, Option 2 (Editorial Accent Treatment) on the PDP — plus elevate product names with the Ribeye typeface and auto-flow the PDP gallery queue on landing
+
+### Option 3 — Editorial Price Card (product cards)
+
+- **New shared component:** `src/components/product/product-card-price.tsx` — the single card price presentation path; fixed-price products render a tiny letterspaced `PRICE` label framed by two symmetric thin divider lines (`bg-border`, theme-aware) with the formatted price below in `font-serif text-lg` at full `text-foreground` (was faint `text-sm muted`)
+- **Wired through:** `product-card.tsx` → every card surface inherits automatically (homepage featured, shop grid, collections grid, collection detail grid, related pieces) — no per-product markup, no slugs, no Admin config
+- **Collection featured hero:** `collection-slug-client.tsx` hardcoded `"Price on request"` replaced with shared `ProductCardPrice` driven by product data (removes last per-surface hardcode)
+- **Price-on-request / incomplete price:** unchanged plain text (no forced PRICE block)
+- **Center alignment:** card details (name, collection, price block, availability badge) now `text-center` on mobile + desktop; divider row `justify-center` with equal `flex-1` lines; badge is inline so it centers with the text
+- **PDP untouched by Option 3:** `ProductPrice` remains the PDP path (see Option 2 below)
+
+### Product Name Typography — Ribeye
+
+- **Font:** `Ribeye` added via `next/font/google` in `src/styles/fonts.ts` (weight 400, latin, `display: swap`), variable `--font-ribeye-display`; exposed as Tailwind utility `font-ribeye` via `@theme inline --font-ribeye` (distinct variable name avoids a self-referential CSS var collision)
+- **Size rule:** product name `text-[15px]` = exactly 3 points larger than the collection line (`text-xs` = 12px), same on mobile and desktop; `font-medium` dropped (Ribeye ships 400 only)
+- **Surfaces switched to `font-ribeye`:** product card name, PDP H1 (`product-info-panel`), collection featured-product title, saved-piece card, order drawer line item, sticky mobile CTA — all current and future products inherit via these shared components
+
+### Option 2 — Editorial Accent Treatment (PDP)
+
+- **New token:** `--accent-price` in `globals.css` — light `#79583A` (existing HAMMAH accent), dark `[data-theme="dark"]` `#C9A06A` (warm gold, ~7.8:1 on dark bg vs ~3.2:1 for base accent); exposed as `--color-accent-price` → `text-accent-price` / `from-accent-price` utilities that switch with the theme toggle (no `dark:` variant — repo toggles via `data-theme`)
+- **Shared component:** `ProductPrice` FIXED branch now renders large upright serif price (`font-serif text-2xl sm:text-3xl tracking-tight leading-none text-accent-price`) with a subtle editorial underline hugging the price width (`h-px` gradient `from-accent-price via-accent-price/40 to-transparent`)
+- **Font config:** Instrument Serif now loads `style: ["normal", "italic"]` (additive — price renders upright; all existing `font-serif italic` usages unchanged)
+- **Availability pill beside price:** `product-info-panel` price row changed from vertical stack to `flex flex-wrap items-center gap-x-4 gap-y-2` — pill sits beside price, wraps cleanly on mobile
+- **PRICE_ON_REQUEST:** existing plain-text state preserved verbatim
+- **Inheritance:** every current and future fixed-price product on any `ProductPrice` surface gets the treatment automatically — no per-product setup
+
+### PDP Gallery Auto-Flow
+
+- **Behaviour:** on landing, `product-gallery.tsx` auto-advances the image queue every **2.5s** (`AUTO_ADVANCE_MS`) from first → last, then **stops at the last image** (no loop)
+- **Guards:** skips when reduced-motion is preferred, `images.length < 2`, lightbox open, or user engaged
+- **Takeover:** clicking a thumbnail sets `userEngaged` → auto-flow stops permanently; lightbox keeps its own independent index/keyboard nav
+- **Sync:** counter (`1 / 5`), active thumbnail ring, and the existing `motion.div key={activeIndex}` crossfade all follow automatically — no markup/layout change
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/components/product/product-card-price.tsx` | Shared Option 3 editorial card price block (all card surfaces) |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/styles/fonts.ts` | Added `Ribeye` (variable `--font-ribeye-display`); Instrument Serif loads `["normal", "italic"]` |
+| `src/app/globals.css` | `--accent-price` (light/dark) + `--color-accent-price` + `--font-ribeye` theme entries |
+| `src/components/product/product-card.tsx` | Uses `ProductCardPrice`; centered details; name `font-ribeye text-[15px]` |
+| `src/components/product/product-price.tsx` | Option 2 editorial accent treatment for FIXED; POR/incomplete branches unchanged |
+| `src/components/product/product-info-panel.tsx` | Price + availability pill in one flex row; PDP H1 `font-ribeye` |
+| `src/app/(public)/collections/[slug]/collection-slug-client.tsx` | Featured hero price via shared component; featured title `font-ribeye` |
+| `src/components/account/saved-piece-card.tsx` | Name `font-ribeye text-[15px]` |
+| `src/components/product/order-drawer.tsx` | Line-item name `font-ribeye text-[15px]` |
+| `src/components/product/sticky-mobile-cta.tsx` | Product name `font-ribeye text-[15px]` |
+| `src/components/product/product-gallery.tsx` | Auto-flow effect (2.5s, stop at last, engagement/reduced-motion guards) |
+
+### Not Changed (by design)
+
+- Card image sizing, grid structure, availability badge logic, hover crossfade, routing, pricing data flow
+- PDP size selector, quantity, order/save buttons, gallery lightbox behaviour, media mode/video
+- Pricing persistence, catalogue queries, Admin pricing form, JSON-LD
+- No per-product slugs, exceptions, or Admin setup anywhere in this work
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean (0 errors) after every workstream |
+| `npm run build` | ✅ Succeeds, 50 pages |
+| `npm run lint` (scoped to changed files) | ✅ 0 new findings — only pre-existing `no-img-element` warnings and pre-existing `order-drawer` hook/React-Compiler errors, line-shifted; repo-wide baseline unchanged at 266 problems (114 errors) |
+
+### Status — Price Treatment Exploration + Ribeye Typography + Gallery Auto-Flow: COMPLETE

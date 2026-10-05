@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getHomepageFeaturedProducts } from "@/lib/catalogue";
+import { getHomepageFeaturedProducts, getCollectionProducts } from "@/lib/catalogue";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import type { Product } from "@/types/products";
 import { HomeEditorialHero } from "@/components/home/home-editorial-hero";
@@ -65,12 +65,15 @@ function toLegacyProducts(items: CatalogueProduct[]): Product[] {
 }
 
 export default async function HomePage() {
-  const featuredProducts = await getHomepageFeaturedProducts();
+  const [featuredProducts, collectionProducts] = await Promise.all([
+    getHomepageFeaturedProducts(),
+    getCollectionProducts("collection-001"),
+  ]);
 
   return (
     <>
       <HomeEditorialHero />
-      <HomeCollection001 />
+      <HomeCollection001 products={toLegacyProducts(collectionProducts)} />
       <HomeHammahWorld />
       <HomeDetailCraft />
       <HomeFeaturedPieces products={toLegacyProducts(featuredProducts)} />

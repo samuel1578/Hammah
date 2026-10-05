@@ -107,10 +107,10 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-foreground ${
+                className={`font-smokum text-xl font-normal leading-none text-foreground transition-colors hover:text-accent ${
                   pathname === link.href || pathname.startsWith(link.href + "/")
-                    ? "text-foreground"
-                    : "text-foreground/70"
+                    ? "underline decoration-accent decoration-2 underline-offset-4"
+                    : ""
                 }`}
               >
                 {link.label}

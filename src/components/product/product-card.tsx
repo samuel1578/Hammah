@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useId } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { Product } from "@/types/products";
 import type { MediaSlot } from "@/data/media-manifest";
-import { ProductPrice } from "@/components/product/product-price";
+import { ProductCardPrice } from "@/components/product/product-card-price";
 import { AvailabilityLabel } from "@/components/product/availability-label";
+import { GlitchText } from "@/components/editorial/glitch-text";
 import { MediaReveal } from "@/components/motion/media-reveal";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
@@ -61,6 +62,8 @@ export function ProductCard({ product, media, index = 0 }: ProductCardProps) {
   }, []);
 
   const showHover = hovered && desktopHover && desktopHover !== desktopPrimary;
+  const hasMultipleImages = mobile.length > 1;
+  const paginationElId = `card-dots-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
   return (
     <Link
@@ -103,7 +106,11 @@ export function ProductCard({ product, media, index = 0 }: ProductCardProps) {
           modules={[Pagination]}
           slidesPerView={1}
           spaceBetween={0}
-          pagination={{ clickable: true }}
+          pagination={
+            hasMultipleImages
+              ? { el: `#${paginationElId}`, clickable: true }
+              : false
+          }
           className="product-card-swiper h-full md:hidden"
           touchRatio={1}
           preventClicks={false}
@@ -127,10 +134,20 @@ export function ProductCard({ product, media, index = 0 }: ProductCardProps) {
         </div>
       </MediaReveal>
 
-      <div className="mt-3 space-y-1">
-        <p className="text-sm font-medium text-foreground">{product.name}</p>
-        <p className="text-xs text-muted-foreground">Collection 001</p>
-        <ProductPrice
+      {/* Pagination dots — outside the image viewport so they stay visible */}
+      {hasMultipleImages && (
+        <div
+          id={paginationElId}
+          className="product-card-pagination swiper-pagination mt-3 md:hidden"
+        />
+      )}
+
+      <div className="mt-2 space-y-1 text-center">
+        <p className="font-ribeye text-[15px] leading-snug text-foreground">{product.name}</p>
+        <GlitchText as="p" className="text-xs text-muted-foreground">
+          Collection 001
+        </GlitchText>
+        <ProductCardPrice
           pricingMode={product.pricingMode}
           priceAmount={product.priceAmount}
           currency={product.currency}

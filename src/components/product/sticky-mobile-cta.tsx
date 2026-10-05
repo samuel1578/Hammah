@@ -35,7 +35,7 @@ export function StickyMobileCTA({
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="flex-1 truncate text-sm font-medium text-foreground">
+            <span className="flex-1 truncate font-ribeye text-[15px] text-foreground">
               {productName}
             </span>
             <button

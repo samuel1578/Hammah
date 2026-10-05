@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRotatingImagePair } from "@/components/editorial/rotating-image-pair";
 import { Reveal } from "@/components/motion/reveal";
 import { TextReveal } from "@/components/motion/text-reveal";
+import { GlitchText } from "@/components/editorial/glitch-text";
 import { Container } from "@/components/ui/container";
 import { BrandLogo } from "@/components/brand/brand-logo";
 
@@ -29,7 +30,9 @@ export function HomeDetailCraft() {
       <Container>
         {/* Eyebrow */}
         <Reveal delay={0} y={8}>
-          <p className="type-eyebrow mb-5 text-muted-foreground">In the Details</p>
+          <GlitchText as="p" className="type-eyebrow mb-5 text-muted-foreground">
+            In the Details
+          </GlitchText>
         </Reveal>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-20 md:items-center">

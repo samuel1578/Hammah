@@ -18,6 +18,8 @@
   --border: #D6D0C8;
   --accent: #79583A;
   --accent-foreground: #F7F5F1;
+  --accent-price: #79583A;
+  --glitch-cool: #2E9C94;
   --overlay: rgba(17, 17, 16, 0.6);
 }
 
@@ -32,6 +34,8 @@
   --border: #3A3836;
   --accent: #79583A;
   --accent-foreground: #F7F5F1;
+  --accent-price: #C9A06A;
+  --glitch-cool: #5FD0C6;
   --overlay: rgba(0, 0, 0, 0.7);
 }
 
@@ -46,10 +50,13 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-price: var(--accent-price);
   --color-overlay: var(--overlay);
 
   --font-sans: var(--font-dm-sans);
   --font-serif: var(--font-instrument-serif);
+  --font-ribeye: var(--font-ribeye-display);
+  --font-smokum: var(--font-smokum);
 }
 
 /* ── Global Base ── */
@@ -260,6 +267,43 @@ body.menu-open {
   opacity: 0.65;
 }
 
+/* Mix CTA — frosted glass base (secondary) + primary engraving texture */
+.btn-engraved-mix {
+  position: relative;
+  overflow: hidden;
+  background: rgba(17, 17, 16, 0.42);
+  color: #F7F5F1;
+  border: 1px solid rgba(247, 245, 241, 0.36);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn-engraved-mix::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/hammah/global/buttons/cta-primary-engraving.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-engraved-mix:hover {
+  background: rgba(17, 17, 16, 0.58);
+  border-color: rgba(247, 245, 241, 0.58);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-engraved-mix:hover::before {
+  transform: scale(1.04) translateX(-2px);
+  opacity: 0.7;
+}
+
 /* ══════════════════════════════════════════
    AVAILABILITY BADGE — Sprint 0.10
    ══════════════════════════════════════════ */
@@ -315,11 +359,15 @@ body.menu-open {
   width: 100%;
 }
 
-.product-card-swiper .swiper-pagination {
-  bottom: 6px !important;
+.product-card-pagination.swiper-pagination {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  width: 100%;
 }
 
-.product-card-swiper .swiper-pagination-bullet {
+.product-card-pagination .swiper-pagination-bullet {
   width: 4px;
   height: 4px;
   background: var(--muted-foreground);
@@ -327,7 +375,7 @@ body.menu-open {
   transition: all 0.3s ease;
 }
 
-.product-card-swiper .swiper-pagination-bullet-active {
+.product-card-pagination .swiper-pagination-bullet-active {
   opacity: 1;
   background: var(--foreground);
   width: 12px;
@@ -361,4 +409,360 @@ body.menu-open {
   background: var(--foreground);
   width: 20px;
   border-radius: 3px;
+}
+
+/* ── Homepage collection marquee ── */
+.marquee-track {
+  animation: marquee-scroll 45s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
+  }
+
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ══════════════════════════════════════════
+   GLITCH TEXT — collection headings
+   ══════════════════════════════════════════ */
+
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.glitch::before {
+  color: var(--accent-price);
+}
+
+.glitch::after {
+  color: var(--glitch-cool);
+}
+
+.glitch--active::before {
+  animation: glitch-band-a 2s steps(1, end) both;
+}
+
+.glitch--active::after {
+  animation: glitch-band-b 2s steps(1, end) both;
+}
+
+.glitch:hover::before {
+  animation: glitch-band-a 2s steps(1, end) both;
+}
+
+.glitch:hover::after {
+  animation: glitch-band-b 2s steps(1, end) both;
+}
+
+.glitch--active {
+  animation: glitch-jitter 2s steps(1, end) both;
+}
+
+.glitch:hover {
+  animation: glitch-jitter 2s steps(1, end) both;
+}
+
+@keyframes glitch-band-a {
+  0% {
+    opacity: 0.95;
+    clip-path: inset(12% 0 62% 0);
+    transform: translate(-8px, -2px);
+  }
+  10% {
+    opacity: 0.95;
+    clip-path: inset(48% 0 30% 0);
+    transform: translate(10px, 2px);
+  }
+  20% {
+    opacity: 0.95;
+    clip-path: inset(70% 0 8% 0);
+    transform: translate(-11px, -1px);
+  }
+  30% {
+    opacity: 0.95;
+    clip-path: inset(25% 0 55% 0);
+    transform: translate(9px, 3px);
+  }
+  40% {
+    opacity: 0.95;
+    clip-path: inset(58% 0 26% 0);
+    transform: translate(-12px, 2px);
+  }
+  50% {
+    opacity: 0.95;
+    clip-path: inset(5% 0 78% 0);
+    transform: translate(11px, -3px);
+  }
+  60% {
+    opacity: 0.95;
+    clip-path: inset(82% 0 4% 0);
+    transform: translate(-9px, 1px);
+  }
+  70% {
+    opacity: 0.95;
+    clip-path: inset(38% 0 44% 0);
+    transform: translate(12px, -2px);
+  }
+  80% {
+    opacity: 0.95;
+    clip-path: inset(64% 0 20% 0);
+    transform: translate(-10px, 3px);
+  }
+  90% {
+    opacity: 0.9;
+    clip-path: inset(18% 0 66% 0);
+    transform: translate(7px, -1px);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(45% 0 45% 0);
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-band-b {
+  0% {
+    opacity: 0.95;
+    clip-path: inset(66% 0 14% 0);
+    transform: translate(9px, 2px);
+  }
+  10% {
+    opacity: 0.95;
+    clip-path: inset(8% 0 74% 0);
+    transform: translate(-10px, -2px);
+  }
+  20% {
+    opacity: 0.95;
+    clip-path: inset(40% 0 40% 0);
+    transform: translate(12px, 1px);
+  }
+  30% {
+    opacity: 0.95;
+    clip-path: inset(75% 0 6% 0);
+    transform: translate(-9px, -3px);
+  }
+  40% {
+    opacity: 0.95;
+    clip-path: inset(20% 0 60% 0);
+    transform: translate(11px, -2px);
+  }
+  50% {
+    opacity: 0.95;
+    clip-path: inset(54% 0 28% 0);
+    transform: translate(-12px, 2px);
+  }
+  60% {
+    opacity: 0.95;
+    clip-path: inset(2% 0 84% 0);
+    transform: translate(10px, 3px);
+  }
+  70% {
+    opacity: 0.95;
+    clip-path: inset(86% 0 2% 0);
+    transform: translate(-11px, -1px);
+  }
+  80% {
+    opacity: 0.95;
+    clip-path: inset(32% 0 50% 0);
+    transform: translate(8px, 2px);
+  }
+  90% {
+    opacity: 0.9;
+    clip-path: inset(58% 0 24% 0);
+    transform: translate(-7px, -2px);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(50% 0 50% 0);
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-jitter {
+  0% {
+    transform: translate(0, 0);
+    clip-path: inset(0);
+  }
+  10% {
+    transform: translate(-3px, 0);
+    clip-path: inset(0);
+  }
+  20% {
+    transform: translate(4px, -2px);
+    clip-path: inset(0);
+  }
+  30% {
+    transform: translate(-5px, 0);
+    clip-path: inset(35% 0 30% 0);
+  }
+  40% {
+    transform: translate(3px, 2px);
+    clip-path: inset(0);
+  }
+  50% {
+    transform: translate(-4px, -1px);
+    clip-path: inset(0);
+  }
+  60% {
+    transform: translate(5px, 1px);
+    clip-path: inset(55% 0 15% 0);
+  }
+  70% {
+    transform: translate(-3px, 2px);
+    clip-path: inset(0);
+  }
+  80% {
+    transform: translate(4px, -2px);
+    clip-path: inset(0);
+  }
+  90% {
+    transform: translate(-4px, 0);
+    clip-path: inset(10% 0 70% 0);
+  }
+  100% {
+    transform: translate(0, 0);
+    clip-path: inset(0);
+  }
+}
+
+/* ── Mild variant — gentle, pre-aggression treatment ── */
+.glitch--mild.glitch--active::before,
+.glitch--mild.glitch:hover::before {
+  animation-name: glitch-band-a-mild;
+  animation-duration: 0.8s;
+}
+
+.glitch--mild.glitch--active::after,
+.glitch--mild.glitch:hover::after {
+  animation-name: glitch-band-b-mild;
+  animation-duration: 0.8s;
+}
+
+.glitch--mild.glitch--active,
+.glitch--mild.glitch:hover {
+  animation-name: glitch-jitter-mild;
+  animation-duration: 0.8s;
+}
+
+@keyframes glitch-band-a-mild {
+  0% {
+    opacity: 0.9;
+    clip-path: inset(15% 0 55% 0);
+    transform: translate(-4px, -1px);
+  }
+  25% {
+    opacity: 0.9;
+    clip-path: inset(55% 0 25% 0);
+    transform: translate(5px, 1px);
+  }
+  50% {
+    opacity: 0.85;
+    clip-path: inset(30% 0 45% 0);
+    transform: translate(-5px, 0);
+  }
+  75% {
+    opacity: 0.5;
+    clip-path: inset(70% 0 12% 0);
+    transform: translate(4px, -1px);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(45% 0 45% 0);
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-band-b-mild {
+  0% {
+    opacity: 0.9;
+    clip-path: inset(60% 0 18% 0);
+    transform: translate(4px, 1px);
+  }
+  25% {
+    opacity: 0.9;
+    clip-path: inset(10% 0 70% 0);
+    transform: translate(-5px, -1px);
+  }
+  50% {
+    opacity: 0.85;
+    clip-path: inset(45% 0 35% 0);
+    transform: translate(5px, 1px);
+  }
+  75% {
+    opacity: 0.5;
+    clip-path: inset(25% 0 55% 0);
+    transform: translate(-4px, 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(50% 0 50% 0);
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-jitter-mild {
+  0% {
+    transform: translate(0, 0);
+    clip-path: inset(0);
+  }
+  25% {
+    transform: translate(-2px, 0);
+    clip-path: inset(0);
+  }
+  50% {
+    transform: translate(2px, -1px);
+    clip-path: inset(35% 0 35% 0);
+  }
+  75% {
+    transform: translate(-2px, 1px);
+    clip-path: inset(0);
+  }
+  100% {
+    transform: translate(0, 0);
+    clip-path: inset(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch::before,
+  .glitch::after {
+    animation: none !important;
+    opacity: 0;
+  }
+
+  .glitch--active,
+  .glitch:hover {
+    animation: none !important;
+    transform: none;
+    clip-path: none;
+  }
 }

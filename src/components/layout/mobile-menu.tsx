@@ -109,7 +109,7 @@ export function MobileMenu({
                     <Link
                       href={link.href}
                       onClick={onClose}
-                      className="group flex items-baseline gap-4 py-3 text-2xl font-medium text-foreground transition-colors hover:text-accent"
+                      className="group flex items-baseline gap-4 py-3 font-smokum text-2xl font-normal text-foreground transition-colors hover:text-accent"
                     >
                       <span className="text-sm font-normal text-muted-foreground/60">
                         0{i + 1}

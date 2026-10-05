@@ -4,7 +4,7 @@ import { useState, useCallback, useId } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Reveal } from "@/components/motion/reveal";
-import { TextReveal } from "@/components/motion/text-reveal";
+import { GlitchText } from "@/components/editorial/glitch-text";
 import { Container } from "@/components/ui/container";
 
 interface FaqItem {
@@ -100,15 +100,14 @@ export function HomeFaq() {
             <Reveal delay={0} y={8}>
               <p className="type-eyebrow mb-4 text-muted-foreground">FAQ</p>
             </Reveal>
-            <TextReveal
+            <GlitchText
               as="h2"
               id="faq-heading"
+              variant="mild"
               className="type-headline text-foreground"
             >
-              Questions,
-              <br />
-              answered.
-            </TextReveal>
+              Questions, answered.
+            </GlitchText>
             <Reveal delay={0.15} y={12}>
               <p className="type-body mt-6 max-w-xs text-muted-foreground">
                 A few things worth knowing before you choose a piece.
@@ -161,7 +160,10 @@ export function HomeFaq() {
                     </span>
 
                     {/* Question text */}
-                    <span
+                    <GlitchText
+                      as="span"
+                      variant="mild"
+                      active={isActive}
                       className={`flex-1 font-serif text-lg italic leading-snug tracking-tight transition-all duration-200 md:text-xl ${
                         isActive
                           ? "text-foreground"
@@ -169,7 +171,7 @@ export function HomeFaq() {
                       }`}
                     >
                       {item.question}
-                    </span>
+                    </GlitchText>
 
                     {/* Plus / Minus */}
                     <motion.span
