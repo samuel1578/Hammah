@@ -1586,3 +1586,90 @@ Align public Hamatee messaging and signup flow with the actual HAMMAH product. R
 | `npm run build` | ✅ 62 pages |
 
 ### Sprint 0.19 Corrective Pass Status: COMPLETE
+
+---
+
+## Mini Fix — Favicon + Search Result Site Icon
+
+**Date:** September 29, 2026 | **Status:** ✅ Complete
+
+### Objective
+
+Make Google Search, Google Search Console, Bing, and browsers consistently recognise the SL by HAMMAH favicon instead of a generic globe/site icon. Metadata/icon task only — no redesign, no SEO title/description changes, no robots/sitemap changes, no auth/orders/admin changes.
+
+### Root Cause
+
+- Root `/favicon.ico` did not exist — live URL returned **404**
+- Homepage `<head>` emitted a single `<link rel="icon" href="/images/hammah/global/logo/favicon.png"/>` with no `type`, no `shortcut`, no `apple-touch-icon`
+- No `favicon.ico`, no `apple-touch-icon`, and no Next.js `icon.*` / `apple-icon.*` file conventions anywhere in the repo
+
+### Favicon Source
+
+| Property | Value |
+|----------|-------|
+| Asset | `public/images/hammah/global/logo/favicon.png` (existing, unchanged) |
+| Dimensions | 512×512, square 1:1 |
+| Format | PNG, RGBA (transparent corners) |
+| Size | 36,988 bytes |
+
+### Files Created
+
+| File | Detail |
+|------|--------|
+| `public/favicon.ico` | 26,169 bytes — 4 entries: 48×48, 32×32, 16×16 (32-bit BMP + AND mask) and 256×256 (PNG-in-ICO), all generated from the existing 512×512 mark; no new artwork |
+| `public/apple-touch-icon.png` | 180×180, 8,311 bytes — same mark scaled, flattened onto `#F7F5F1` (site light surface token) |
+
+- `#F7F5F1` was used instead of `#111110` because the mark is pure black and would be invisible on `#111110`; artwork itself is unaltered
+- No blank, fake, or low-quality upscaled icon produced
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/layout.tsx` | `icons` metadata replaced with `icon: [{ url: "/favicon.ico", type: "image/x-icon" }]`, `shortcut: "/favicon.ico"`, `apple: "/apple-touch-icon.png"` |
+
+### Root Icon Setup
+
+- **Public URL:** `https://www.hammah.store/favicon.ico` (root-level, stable)
+- **Convention:** metadata API only — no `src/app/icon.*` / `src/app/favicon.ico` file convention added, so there is exactly one icon system and no duplicate/conflicting declarations
+- **Emitted head (verified from a running server):**
+
+```html
+<link rel="manifest" href="/manifest.webmanifest"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
+<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+```
+
+- `rel="icon"` occurrences: **1**
+- No `localhost`, `slhammah.vercel.app`, or `slbyhammah.com` references in `<head>`
+
+### Manifest
+
+- **Unchanged:** `src/app/manifest.ts` → `/images/hammah/global/logo/favicon.png`, `512x512`, `image/png` — matches the real file, no invented sizes
+
+### Crawlability
+
+| Check | Result |
+|-------|--------|
+| `robots.txt` | `Allow: /`; disallows only `/admin/`, `/account/`, `/dev/` — favicon not blocked, no favicon rule present |
+| Googlebot / Googlebot-Image | Unrestricted (no broad robots change needed) |
+| `GET /favicon.ico` | ✅ 200, `image/x-icon`, 26,169 bytes, valid ICO (`reserved=0, type=1, count=4`, all 4 entries decoded + dimension-checked) |
+| `GET /apple-touch-icon.png` | ✅ 200, `image/png`, 180×180, valid PNG magic |
+| `GET /images/hammah/global/logo/favicon.png` | ✅ 200, `image/png` |
+| Visual check | 48×48 ICO entry decodes to the same HAMMAH "H" mark as the source |
+
+### Validation
+
+| Check | Result |
+|-------|--------|
+| `npx tsc --noEmit` | ✅ Clean |
+| `npm run lint` | ✅ 267 problems (114 errors, 153 warnings) — byte-identical to the pre-change baseline, **0 new issues** (all pre-existing) |
+| `npm run build` | ✅ Succeeds, routes unchanged |
+
+### Notes
+
+- Changes take effect on `www.hammah.store` only after deploy
+- Google has **not** been shown to refresh the favicon yet — the Search Console property icon may update only after Google recrawls
+
+### Mini Fix — Favicon Search Icon Status: COMPLETE

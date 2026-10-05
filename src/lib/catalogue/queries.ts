@@ -8,7 +8,7 @@ export async function getPublishedProducts(): Promise<CatalogueProduct[]> {
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
+      id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
@@ -33,7 +33,7 @@ export const getPublishedProductBySlug = cache(async function getPublishedProduc
   const { data: product, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
+      id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
@@ -57,7 +57,7 @@ export async function getRelatedProducts(currentSlug: string, count = 4): Promis
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
+      id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories ( slug, name ),
       product_media (
         sort_order, role,
@@ -127,7 +127,7 @@ export async function getCollectionProducts(collectionSlug: string): Promise<Cat
     .select(`
       sort_order,
       product:products!inner (
-        id, slug, name, description, pricing_mode, availability, sort_order, status, video_url, video_media_id, size_guide_id,
+        id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, status, video_url, video_media_id, size_guide_id,
         category:categories ( slug, name ),
         product_media (
           sort_order, role,
@@ -175,7 +175,7 @@ export async function getProductsByCategorySlug(categorySlug: string): Promise<C
   const { data: products, error } = await supabase
     .from("products")
     .select(`
-      id, slug, name, description, pricing_mode, availability, sort_order, video_url, video_media_id, size_guide_id,
+      id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, video_url, video_media_id, size_guide_id,
       category:categories!inner ( slug, name ),
       product_media (
         sort_order, role,
@@ -201,7 +201,7 @@ export async function getHomepageFeaturedProducts(): Promise<CatalogueProduct[]>
     .select(`
       sort_order,
       product:products!inner (
-        id, slug, name, description, pricing_mode, availability, sort_order, status, video_url, video_media_id, size_guide_id,
+        id, slug, name, description, pricing_mode, price_amount, currency, availability, sort_order, status, video_url, video_media_id, size_guide_id,
         category:categories ( slug, name ),
         product_media (
           sort_order, role,
@@ -251,6 +251,8 @@ function mapProduct(row: any): CatalogueProduct {
     description: row.description ?? "",
     category: { slug: category?.slug ?? "", name: category?.name ?? "" },
     pricingMode: row.pricing_mode,
+    priceAmount: row.price_amount ?? null,
+    currency: row.currency ?? "GHS",
     availability: row.availability,
     sortOrder: row.sort_order,
     videoUrl,

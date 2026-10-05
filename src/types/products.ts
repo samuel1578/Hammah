@@ -21,6 +21,9 @@ export interface Product {
   collection: string;
   category: string;
   pricingMode: PricingMode;
+  /** Whole-unit amount as stored in Supabase (e.g. 300 = GHS 300). */
+  priceAmount?: number | null;
+  currency?: string | null;
   availability: Availability;
   description: string;
   videoUrl: string | null;

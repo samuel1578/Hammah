@@ -1,3 +1,5 @@
+import type { Availability, PricingMode } from "@/types/products";
+import { priceToDecimalString } from "@/lib/currency";
 import {
   BRAND_ALTERNATE_NAME,
   BRAND_NAME,
@@ -54,12 +56,22 @@ export function WebSiteJsonLd() {
   );
 }
 
+const SCHEMA_ORG_AVAILABILITY: Record<Availability, string> = {
+  AVAILABLE: "https://schema.org/InStock",
+  COMING_SOON: "https://schema.org/PreOrder",
+  SOLD_OUT: "https://schema.org/OutOfStock",
+};
+
 interface ProductJsonLdProps {
   name: string;
   description: string;
   url: string;
   image?: string;
   category?: string;
+  pricingMode?: PricingMode;
+  priceAmount?: number | null;
+  currency?: string | null;
+  availability?: Availability;
 }
 
 export function ProductJsonLd({
@@ -68,6 +80,10 @@ export function ProductJsonLd({
   url,
   image,
   category,
+  pricingMode,
+  priceAmount,
+  currency,
+  availability,
 }: ProductJsonLdProps) {
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -83,6 +99,16 @@ export function ProductJsonLd({
 
   if (image) data.image = image;
   if (category) data.category = category;
+
+  // Offers are emitted only for genuine fixed-price products with a real amount.
+  if (pricingMode === "FIXED" && priceAmount != null && currency) {
+    data.offers = {
+      "@type": "Offer",
+      price: priceToDecimalString(priceAmount),
+      priceCurrency: currency,
+      ...(availability ? { availability: SCHEMA_ORG_AVAILABILITY[availability] } : {}),
+    };
+  }
 
   return <JsonLd data={data} />;
 }

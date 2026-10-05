@@ -49,6 +49,8 @@ export function ProductInfoPanel({
           <div className="space-y-1">
             <ProductPrice
               pricingMode={product.pricingMode}
+              priceAmount={product.priceAmount}
+              currency={product.currency}
               className="text-base"
             />
             <AvailabilityLabel availability={product.availability} />

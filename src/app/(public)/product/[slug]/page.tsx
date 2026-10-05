@@ -20,6 +20,8 @@ function toLegacyProduct(p: CatalogueProduct): Product {
     collection: "collection-001",
     category: p.category.slug,
     pricingMode: p.pricingMode,
+    priceAmount: p.priceAmount,
+    currency: p.currency,
     availability: p.availability,
     description: p.description,
     videoUrl: p.videoUrl,
@@ -105,6 +107,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
         url={url}
         image={image ?? absoluteUrl(OG_IMAGE_PATH)}
         category={product.category.name || undefined}
+        pricingMode={product.pricingMode}
+        priceAmount={product.priceAmount}
+        currency={product.currency}
+        availability={product.availability}
       />
       <BreadcrumbListJsonLd
         items={[

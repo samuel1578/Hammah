@@ -27,6 +27,8 @@ function toLegacyProducts(items: CatalogueProduct[]): Product[] {
     collection: "collection-001",
     category: p.category.slug,
     pricingMode: p.pricingMode,
+    priceAmount: p.priceAmount,
+    currency: p.currency,
     availability: p.availability,
     description: p.description,
     videoUrl: p.videoUrl,

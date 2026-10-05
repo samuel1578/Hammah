@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { formatPrice } from "@/lib/currency";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -115,7 +116,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   {item.pricing_mode_snapshot === "PRICE_ON_REQUEST"
                     ? "Price on request"
                     : item.price_amount_snapshot != null
-                      ? `${item.currency} ${(item.price_amount_snapshot / 100).toFixed(2)}`
+                      ? formatPrice(item.price_amount_snapshot, item.currency)
                       : "Price on request"}
                 </p>
               </div>

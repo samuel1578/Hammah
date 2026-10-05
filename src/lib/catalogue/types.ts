@@ -9,6 +9,8 @@ export interface CatalogueProduct {
   category: { slug: string; name: string };
   collection?: { slug: string; name: string };
   pricingMode: PricingMode;
+  priceAmount: number | null;
+  currency: string;
   availability: Availability;
   sortOrder: number;
   videoUrl: string | null;
