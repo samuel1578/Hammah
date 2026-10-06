@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { createHamateeEnrolment } from "@/lib/hamatee/enrolment";
+import { dispatchOrderEmails } from "@/lib/email/order-emails";
 import type { CreateOrderResponse } from "@/lib/orders/types";
 
 const postgresUuid = z
@@ -124,6 +125,17 @@ export async function POST(request: Request) {
     if (!result) {
       return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
     }
+
+    // Non-blocking transactional email side effects.
+    //
+    // Registered ONLY after `create_order` has persisted the order. `after()`
+    // runs the callback once the 201 response has been sent, so a Brevo
+    // problem can never delay the response, fail the order, roll it back, or
+    // stop the WhatsApp handoff. The callback re-reads the persisted order
+    // server-side and is fully self-contained (never throws).
+    after(async () => {
+      await dispatchOrderEmails(result.order_id);
+    });
 
     // Handle Hamatee enrolment for guest birthday submissions
     // Order success is never rolled back if enrolment fails

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getMediaById } from "@/data/media-manifest";
 import { createClient } from "@/lib/supabase/client";
+import { SITE_ORIGIN } from "@/lib/seo/site";
 
 type Step = 1 | 2;
 type PageState = "form" | "loading" | "verify-email" | "error";
@@ -90,10 +91,22 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
+
+      // Confirmation links must return through HAMMAH's own callback.
+      // Production always uses the canonical origin; development falls back
+      // to the local origin so localhost confirmation links keep working.
+      // The `welcome=1` marker tells /auth/callback this is a NEW direct
+      // signup, so only this flow can trigger the Hamatee Welcome email.
+      const redirectOrigin =
+        process.env.NODE_ENV === "production"
+          ? SITE_ORIGIN
+          : window.location.origin;
+
       const { error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
+          emailRedirectTo: `${redirectOrigin}/auth/callback?next=/account&welcome=1`,
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),

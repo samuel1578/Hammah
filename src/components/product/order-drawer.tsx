@@ -815,6 +815,18 @@ function GuestIdentityFields({
           className="h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent"
           placeholder="you@example.com"
         />
+        <p className="mt-1 text-xs text-muted-foreground">
+          {emailRequired
+            ? "Required because you added a birthday — we need it to set up your Hamatee account."
+            : "Optional — add your email if you'd like a confirmation copy of this order request."}
+        </p>
+        {!emailRequired && (
+          <p className="mt-2 rounded-md border border-border bg-surface px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+            Your order will still be saved and sent to HAMMAH even if you leave
+            this blank. If you provide an email, we&apos;ll also send your order
+            reference and request summary to your inbox.
+          </p>
+        )}
       </div>
       <div>
         <label

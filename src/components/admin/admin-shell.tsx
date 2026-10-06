@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import {
   LayoutDashboard,
+  ShoppingBag,
+  Settings,
   Package,
   Tag,
   FolderOpen,
@@ -22,6 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tag },
   { href: "/admin/collections", label: "Collections", icon: FolderOpen },
@@ -29,6 +32,7 @@ const navItems = [
   { href: "/admin/media", label: "Media", icon: Image },
   { href: "/admin/homepage", label: "Homepage", icon: Home },
   { href: "/admin/ctas", label: "CTAs", icon: MousePointerClick },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
 
 function NavLink({
